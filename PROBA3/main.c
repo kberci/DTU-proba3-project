@@ -11,5 +11,8 @@ int main(int argc, char* argv[]) {
 
 	SetPixelValue(image, cvPoint(20, 40), pixel(55, 3));
 
+	CvPoint3D32f points[4];
+	GetP4PAbidi(points);
+
 	return 0;
 }
