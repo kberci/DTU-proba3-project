@@ -104,3 +104,87 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
 
 	return EOK;
 }
+
+int GetDistancesMatrix(CvMat* S) {
+	float s12 = 154.5;
+	float s13 = 219;
+	float s14 = 154.5;
+	float s15 = 126.5;
+	float s16 = 888;
+	float s17 = 1341.5;
+	float s18 = 884;
+
+	float s23 = 154.5;
+	float s24 = 217.5;
+	float s25 = 95.5;
+	float s26 = 734.5;
+	float s27 = 1237;
+	float s28 = 896.5;
+
+	float s34 = 153.5;
+	float s35 = 96.5;
+	float s36 = 749.5;
+	float s37 = 1123;
+	float s38 = 746.5;
+
+	float s45 = 123.5;
+	float s46 = 899.5;
+	float s47 = 1236;
+	float s48 = 729.5;
+
+	float s56 = 793.5;
+	float s57 = 1216;
+	float s58 = 813.5;
+
+	float s67 = 883;
+	float s68 = 1341.5;
+
+	float s78 = 884;
+
+	CV_MAT_ELEM(*S, float, 0, 1) = s36;
+	CV_MAT_ELEM(*S, float, 0, 2) = s37;
+	CV_MAT_ELEM(*S, float, 0, 3) = s38;
+	CV_MAT_ELEM(*S, float, 1, 2) = s67;
+	CV_MAT_ELEM(*S, float, 1, 3) = s68;
+	CV_MAT_ELEM(*S, float, 2, 3) = s78;
+
+	//CV_MAT_ELEM(*S, float, 0, 1) = 77.5;
+	//CV_MAT_ELEM(*S, float, 0, 2) = 177.5;
+	//CV_MAT_ELEM(*S, float, 0, 3) = 162.0;
+	//CV_MAT_ELEM(*S, float, 1, 2) = 160.0;
+	//CV_MAT_ELEM(*S, float, 1, 3) = 191.5;
+	//CV_MAT_ELEM(*S, float, 2, 3) = 104.5;
+
+	return EOK;
+}
+
+int CalculateAffineTransform(CvPoint points_L[], CvPoint points_R[], Affine* ret) {
+	float x1 = (float)points_L[0].x;
+	float y1 = (float)points_L[0].y;
+	float x2 = (float)points_L[1].x;
+	float y2 = (float)points_L[1].y;
+	float x3 = (float)points_L[2].x;
+	float y3 = (float)points_L[2].y;
+	float xp1 = (float)points_R[0].x;
+	float yp1 = (float)points_R[0].y;
+	float xp2 = (float)points_R[1].x;
+	float yp2 = (float)points_R[1].y;
+	float xp3 = (float)points_R[2].x;
+	float yp3 = (float)points_R[2].y;
+
+	ret->p0 = -(x1 * xp2 * y3 - x1 * xp3 * y2 - x2 * xp1 * y3 + x2 * xp3 * y1 + x3 * xp1 * y2 - x3 * xp2 * y1) / (x1 * y2 - x2 * y1 - x1 * y3 + x3 * y1 + x2 * y3 - x3 * y2);
+	ret->p1 = (xp1 * y2 - xp2 * y1 - xp1 * y3 + xp3 * y1 + xp2 * y3 - xp3 * y2) / (x1 * y2 - x2 * y1 - x1 * y3 + x3 * y1 + x2 * y3 - x3 * y2);
+	ret->p2 = (x1 * xp2 - x2 * xp1 - x1 * xp3 + x3 * xp1 + x2 * xp3 - x3 * xp2) / (x1 * y2 - x2 * y1 - x1 * y3 + x3 * y1 + x2 * y3 - x3 * y2);
+	ret->q0 = (x1 * y2 * yp3 - x1 * y3 * yp2 - x2 * y1 * yp3 + x2 * y3 * yp1 + x3 * y1 * yp2 - x3 * y2 * yp1) / (x1 * y2 - x2 * y1 - x1 * y3 + x3 * y1 + x2 * y3 - x3 * y2);
+	ret->q1 = -(y1 * yp2 - y2 * yp1 - y1 * yp3 + y3 * yp1 + y2 * yp3 - y3 * yp2) / (x1 * y2 - x2 * y1 - x1 * y3 + x3 * y1 + x2 * y3 - x3 * y2);
+	ret->q2 = (x1 * yp2 - x2 * yp1 - x1 * yp3 + x3 * yp1 + x2 * yp3 - x3 * yp2) / (x1 * y2 - x2 * y1 - x1 * y3 + x3 * y1 + x2 * y3 - x3 * y2);
+
+	return EOK;
+}
+
+int ApplyAffineTransform(CvPoint2D32f pl, Affine T, CvPoint2D32f* pr) {
+	pr->x = T.q0 + T.q1 * pl.x + T.q2 * pl.y;
+	pr->y = T.p0 + T.p1 * pl.x + T.p2 * pl.y;
+
+	return EOK;
+}
