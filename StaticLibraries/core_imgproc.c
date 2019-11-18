@@ -50,3 +50,27 @@ int SetImagePixels(const Pixel color, IplImage* out) {
 
 	return EOK;
 }
+
+int CreateBinary(const IplImage* start_img, IplImage* binary_img, int threshold) {
+	uchar* start_data = (uchar*)start_img->imageData;
+	uchar* binary_data = (uchar*)binary_img->imageData;
+	
+
+	if (binary_img->height != start_img->height || binary_img->widthStep != start_img->widthStep) {
+		printf("  ERROR:   The original image has different shape than the binary!\n\n");
+	}
+
+	for (int j = 0; j < binary_img->height; j++) {
+		for (int i = 0; i < binary_img->width; i++) {
+			int pixel_value = start_data[i + j * binary_img->widthStep];
+			if (pixel_value >= threshold) {
+				binary_data[i + j * binary_img->widthStep] = 255;
+			}
+			else {
+				binary_data[i + j * binary_img->widthStep] = 0;
+			}
+		}
+	}
+
+	return EOK;
+}

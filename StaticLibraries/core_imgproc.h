@@ -34,3 +34,4 @@ inline Pixel pixel(double val0123, int channel) {
 int GetPixelValue(const IplImage* frame, const CvPoint at, Pixel* out);
 int SetPixelValue(const IplImage* frame, const CvPoint at, const Pixel pix);
 int SetImagePixels(const Pixel color, IplImage* out);
+int CreateBinary(const IplImage* img, const IplImage* binary, int threshold);

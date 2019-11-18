@@ -32,6 +32,8 @@ int main(int argc, char* argv[]) {
 
 	IplImage* base = cvLoadImage("base.png", 0);
 	IplImage* rot5 = cvLoadImage("5_rot.png", 0);
+	IplImage* base_binary = cvCloneImage(base);
+	CreateBinary(base, base_binary, 220);
 
 	// cvPoint(col,row) <- this is native to OpenCv
 	CvPoint points_L[3] = {
