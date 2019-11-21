@@ -21,10 +21,10 @@ int main(int argc, char* argv[]) {
 	//};
 	
 	CvPoint2D32f P[4] = { // target points (x,y) in camera coordinates
-		cvPoint2D32f(0.2816,-0.3454),
-		cvPoint2D32f(0.275,0.4642),
 		cvPoint2D32f(-0.3916,-0.209),
-		cvPoint2D32f(-0.5346,0.4642)
+		cvPoint2D32f(-0.5346,0.4642),
+		cvPoint2D32f(0.275,0.4642),
+		cvPoint2D32f(0.2816,-0.3454)
 	};
 
 	CvPoint3D32f points[4]; // returned 4 points (x,y,z) are stored in this array

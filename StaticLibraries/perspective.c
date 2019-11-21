@@ -60,7 +60,7 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
 	//float H42s = pow((x4 - C42 * x2), 2) + pow((y4 - C42 * y2), 2);
 	//float H43s = pow((x4 - C43 * x3), 2) + pow((y4 - C43 * y3), 2);
 	
-	float f = 3.67;
+	float f = 6;
 
 	float F1 = sqrt(pow(x1, 2) + pow(y1, 2) + pow(f, 2));
 	float F2 = sqrt(pow(x2, 2) + pow(y2, 2) + pow(f, 2));
@@ -124,7 +124,7 @@ int GetDistancesMatrix(CvMat* S) {
 	float s34 = 153.5;
 	float s35 = 96.5;
 	float s36 = 749.5;
-	float s37 = 1123;
+	float s37 = 1033;
 	float s38 = 746.5;
 
 	float s45 = 123.5;
@@ -137,7 +137,7 @@ int GetDistancesMatrix(CvMat* S) {
 	float s58 = 813.5;
 
 	float s67 = 883;
-	float s68 = 1341.5;
+	float s68 = 1251.5;
 
 	float s78 = 884;
 
