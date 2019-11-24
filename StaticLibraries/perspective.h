@@ -9,6 +9,7 @@ typedef struct {
 	float q2;
 } Affine;
 
+int PixelToCameraCoordinate(const CvPoint2D32f P[4], CvPoint2D32f* C[4]);
 int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]);
 int GetDistancesMatrix(CvMat* S);
 int CalculateAffineTransform(CvPoint points_L[], CvPoint points_R[], Affine* ret);

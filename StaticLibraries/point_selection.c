@@ -29,21 +29,50 @@ int FreeArray(Array* a) {
 
 int FindStart(const IplImage* image, CvPoint* start) {
 	uchar* image_data = (uchar*)image->imageData;
-	int i = 0;
-	int w = image->width;
-	int ws = image->widthStep;
-	int h = image->height;
-	int img_size = w * h;
-	while (i < img_size) {
-		if (image_data[i] == 255) {
-			start->x = i % ws;
-			start->y = (int)(i / ws);
-			break;
+
+	for (int j = 0; j < image->height; j++) {
+		for (int i = 0; i < image->width; i++) {
+			int pixel_value = image_data[i + j * image->widthStep];
+			if (pixel_value == 255) {
+				start->x = i;
+				start->y = j;
+				return EOK;
+			}
 		}
-		i++;
+	}
+}
+
+#define M_PI acos(-1.0)
+
+int FindContour(const IplImage* frame, CvPoint start, Array* point_set, CvPoint from, CvPoint p) {
+	// recursion base case: if 'p' == 'start'
+	if ((p.x == start.x) && (p.y == start.y)) {
+		return 1;
 	}
 
-	return EOK;
+	// first call to this function
+	if (from.x == NULL) {
+		from = cvPoint(start.x - 1, start.y);
+		p = start;
+	}
+
+	InsertArray(point_set, p); // insert pixel into contour array
+	double angle = atan2(p.y - from.y, p.x - from.x); // angle used to determine the first pixel neighbor to check
+	uchar* data = (uchar*)frame->imageData;
+
+	// check 3 neighbors
+	for (int k = 0; k < 3; k++) {
+		int check_y = p.y - (int)cos(angle + (k * M_PI / 2));
+		int check_x = p.x + (int)sin(angle + (k * M_PI / 2));
+		int value = data[check_x + check_y * frame->widthStep];
+
+		if (value == 255) {
+			int ret = FindContour(frame, start, point_set, p, cvPoint(check_x, check_y), false);
+			if (ret) return 1;
+		}
+	}
+
+	return 0;
 }
 
 int FindBorder(const IplImage* image, CvPoint start, Array* point_set) {
@@ -132,24 +161,26 @@ int FillInside(const IplImage* image, Array point_set) {
 	return EOK;
 }
 
-int FindCenter(Array point_set, CvPoint* center) {
+int FindCenter(Array point_set, CvPoint2D32f* center) {
 	int sumX = 0;
 	int sumY = 0;
 	for (int i = 0; i < point_set.used; i++) {
 		sumX += point_set.array[i].x;
 		sumY += point_set.array[i].y;
 	}
-	center->x = sumX / point_set.used;
-	center->y = sumY / point_set.used;
+	center->x = (float)sumX / (float)point_set.used;
+	center->y = (float)sumY / (float)point_set.used;
 
 	return EOK;
 }
 
-int FindAllCenters(IplImage* image, CvPoint start, Array* point_set, CvPoint* centers) {
-	for (int point_num = 0; point_num < total_points; point_num++) {
+
+int FindAllCenters(IplImage* image, CvPoint start, Array* point_set, CvPoint2D32f* centers) {
+	for (int point_num = 0; point_num < TOTAL_POINTS; point_num++) {
 		InitArray(&point_set[point_num], 1);
 		FindStart(image, &start);
-		FindBorder(image, start, &point_set[point_num]);
+		//FindBorder(image, start, &point_set[point_num]);
+		FindContour(image, start, &point_set[point_num], cvPoint(NULL, NULL), cvPoint(NULL, NULL));
 		FillInside(image, point_set[point_num]);
 		FindCenter(point_set[point_num], &centers[point_num]);
 	}
@@ -157,7 +188,8 @@ int FindAllCenters(IplImage* image, CvPoint start, Array* point_set, CvPoint* ce
 	return EOK;
 }
 
-int RotationalTransformation(CvPoint point, CvPoint* convertedPoint, float theta) {
+
+int RotationalTransformation(CvPoint2D32f point, CvPoint2D32f* convertedPoint, float theta) {
 	float R11 = cos(theta);
 	float R12 = -sin(theta);
 	float R21 = -R12;
@@ -169,20 +201,20 @@ int RotationalTransformation(CvPoint point, CvPoint* convertedPoint, float theta
 	return EOK;
 }
 
-int ChoosePoints3678(CvPoint* centers, CvPoint* points3678) {
+int ChoosePoints3678(CvPoint2D32f* centers, CvPoint2D32f* points3678) {
 	// Find geometrical center of the points:
-	int sumX = 0;
-	int sumY = 0;
-	for (int i = 0; i < total_points; i++) {
+	float sumX = 0;
+	float sumY = 0;
+	for (int i = 0; i < TOTAL_POINTS; i++) {
 		sumX += centers[i].x;
 		sumY += centers[i].y;
 	}
-	CvPoint geometrical_center = cvPoint((int)sumX / total_points, (int)sumY / total_points);
+	CvPoint2D32f geometrical_center = cvPoint2D32f(sumX / (float)TOTAL_POINTS, sumY / (float)TOTAL_POINTS);
 
 	// Find 3rd point as the closest to the center:
 	float distances[8];
 	float min_distance = LONG_MAX;
-	for (int i = 0; i < total_points; i++) {
+	for (int i = 0; i < TOTAL_POINTS; i++) {
 		distances[i] = sqrt(pow((geometrical_center.x - centers[i].x), 2) + pow((geometrical_center.y - centers[i].y), 2));
 		if (distances[i] < min_distance) {
 			points3678[0] = centers[i];
@@ -192,9 +224,9 @@ int ChoosePoints3678(CvPoint* centers, CvPoint* points3678) {
 
 	// Make new coordinate system  on the line between the center point and the 3rd point and convert the point coordinates:
 	float theta = atan2(geometrical_center.y - points3678[0].y, geometrical_center.x - points3678[0].x);
-	CvPoint converted_points[total_points];
-	CvPoint translated_points[total_points];
-	for (int i = 0; i < total_points; i++) {
+	CvPoint2D32f converted_points[TOTAL_POINTS];
+	CvPoint2D32f translated_points[TOTAL_POINTS];
+	for (int i = 0; i < TOTAL_POINTS; i++) {
 		translated_points[i].x = centers[i].x - points3678[0].x; //Translation
 		translated_points[i].y = centers[i].y - points3678[0].y;
 		RotationalTransformation(translated_points[i], &converted_points[i], theta); //Rotation
@@ -203,7 +235,7 @@ int ChoosePoints3678(CvPoint* centers, CvPoint* points3678) {
 	// Find 3 farthest points from the new origo:
 	int indicies[3] = { -1 };
 	float max_distances[3] = { 0 };
-	for (int i = 0; i < total_points; i++) {
+	for (int i = 0; i < TOTAL_POINTS; i++) {
 		if (distances[i] > max_distances[0])
 		{
 			max_distances[2] = max_distances[1];

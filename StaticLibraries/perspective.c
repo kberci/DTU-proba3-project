@@ -4,6 +4,24 @@ int cmpfunc(const void* a, const void* b) {
 	return (*(int*)a - *(int*)b);
 }
 
+int PixelToCameraCoordinate(const CvPoint2D32f P[4], CvPoint2D32f C[4]) {
+	for (int i = 0; i < 4; i++) {
+		//C[i].x = (P[i].x - 1152) * 0.0022;
+		//C[i].y = (P[i].y -  768) * 0.0022;
+		//TODO: check fx and fy  this gives 6times in z for the output in abidi?
+		float fx = 0.006 / 2.2e-6;
+		float fy = 0.006 / 2.2e-6;
+		float cx = 1151.0;
+		float cy = 767.0;
+		float s  = 0;
+
+		C[i].x = (P[i].x * fy - P[i].y * s - cx * fy + cy * s) / (fx * fy);
+		C[i].y = (P[i].y - cy) / fy;
+	}
+
+	return EOK;
+}
+
 int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
 
 	float s12 = CV_MAT_ELEM(*S, float, 0, 1);
@@ -40,12 +58,12 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
 	float C23 = (B2 * A3) / (A2 * B3);
 	float C24 = (B1 * A3) / (A1 * B3);
 	float C34 = (B1 * A2) / (A1 * B2);
-	//float C21 = 1.0 / C12;
-	//float C31 = 1.0 / C13;
+	float C21 = 1.0 / C12;
+	float C31 = 1.0 / C13;
 	float C41 = 1.0 / C14;
-	//float C32 = 1.0 / C23;
-	//float C42 = 1.0 / C24;
-	//float C43 = 1.0 / C34;
+	float C32 = 1.0 / C23;
+	float C42 = 1.0 / C24;
+	float C43 = 1.0 / C34;
 
 	float H12s = pow((x1 - C12 * x2), 2) + pow((y1 - C12 * y2), 2);
 	float H13s = pow((x1 - C13 * x3), 2) + pow((y1 - C13 * y3), 2);
@@ -53,14 +71,30 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
 	float H23s = pow((x2 - C23 * x3), 2) + pow((y2 - C23 * y3), 2);
 	float H24s = pow((x2 - C24 * x4), 2) + pow((y2 - C24 * y4), 2);
 	float H34s = pow((x3 - C34 * x4), 2) + pow((y3 - C34 * y4), 2);
-	//float H21s = pow((x2 - C21 * x1), 2) + pow((y2 - C21 * y1), 2);
-	//float H31s = pow((x3 - C31 * x1), 2) + pow((y3 - C31 * y1), 2);
+	float H21s = pow((x2 - C21 * x1), 2) + pow((y2 - C21 * y1), 2);
+	float H31s = pow((x3 - C31 * x1), 2) + pow((y3 - C31 * y1), 2);
 	float H41s = pow((x4 - C41 * x1), 2) + pow((y4 - C41 * y1), 2);
-	//float H32s = pow((x3 - C32 * x2), 2) + pow((y3 - C32 * y2), 2);
-	//float H42s = pow((x4 - C42 * x2), 2) + pow((y4 - C42 * y2), 2);
-	//float H43s = pow((x4 - C43 * x3), 2) + pow((y4 - C43 * y3), 2);
+	float H32s = pow((x3 - C32 * x2), 2) + pow((y3 - C32 * y2), 2);
+	float H42s = pow((x4 - C42 * x2), 2) + pow((y4 - C42 * y2), 2);
+	float H43s = pow((x4 - C43 * x3), 2) + pow((y4 - C43 * y3), 2);
 	
 	float f = 6;
+
+	float f123 = sqrt((pow(s13, 2) * H12s - pow(s12, 2) * H13s) / (pow(s12, 2) * pow(1 - C13, 2) - pow(s13, 2) * pow(1 - C12, 2)));
+	float f124 = sqrt((pow(s14, 2) * H12s - pow(s12, 2) * H14s) / (pow(s12, 2) * pow(1 - C14, 2) - pow(s14, 2) * pow(1 - C12, 2)));
+	float f134 = sqrt((pow(s14, 2) * H13s - pow(s13, 2) * H14s) / (pow(s13, 2) * pow(1 - C14, 2) - pow(s14, 2) * pow(1 - C13, 2)));
+	float f213 = sqrt((pow(s23, 2) * H21s - pow(s12, 2) * H23s) / (pow(s12, 2) * pow(1 - C23, 2) - pow(s23, 2) * pow(1 - C21, 2)));
+	float f214 = sqrt((pow(s24, 2) * H21s - pow(s12, 2) * H24s) / (pow(s12, 2) * pow(1 - C24, 2) - pow(s24, 2) * pow(1 - C21, 2)));
+	float f234 = sqrt((pow(s24, 2) * H23s - pow(s23, 2) * H24s) / (pow(s23, 2) * pow(1 - C24, 2) - pow(s24, 2) * pow(1 - C23, 2)));
+	float f312 = sqrt((pow(s23, 2) * H31s - pow(s13, 2) * H32s) / (pow(s13, 2) * pow(1 - C32, 2) - pow(s23, 2) * pow(1 - C31, 2)));
+	float f314 = sqrt((pow(s34, 2) * H31s - pow(s13, 2) * H34s) / (pow(s13, 2) * pow(1 - C34, 2) - pow(s34, 2) * pow(1 - C31, 2)));
+	float f324 = sqrt((pow(s34, 2) * H32s - pow(s23, 2) * H34s) / (pow(s23, 2) * pow(1 - C34, 2) - pow(s34, 2) * pow(1 - C32, 2)));
+	float f412 = sqrt((pow(s24, 2) * H41s - pow(s14, 2) * H42s) / (pow(s14, 2) * pow(1 - C42, 2) - pow(s24, 2) * pow(1 - C41, 2)));
+	float f413 = sqrt((pow(s34, 2) * H41s - pow(s14, 2) * H43s) / (pow(s14, 2) * pow(1 - C43, 2) - pow(s34, 2) * pow(1 - C41, 2)));
+	float f423 = sqrt((pow(s34, 2) * H42s - pow(s24, 2) * H43s) / (pow(s24, 2) * pow(1 - C43, 2) - pow(s34, 2) * pow(1 - C42, 2)));
+
+	float f2 = (f123 + f124 + f134 + f213 + f214 + f234 + f312 + f314 + f324 + f412 + f413 + f423) / 12.0;
+	//float f = (f123 + f124 + f134 + f213 + f214 + f234 + f312 + f324 + f412 + f413 + f423) / 11.0;
 
 	float F1 = sqrt(pow(x1, 2) + pow(y1, 2) + pow(f, 2));
 	float F2 = sqrt(pow(x2, 2) + pow(y2, 2) + pow(f, 2));
@@ -111,25 +145,25 @@ int GetDistancesMatrix(CvMat* S) {
 	float s14 = 154.5;
 	float s15 = 126.5;
 	float s16 = 888;
-	float s17 = 1341.5;
+	float s17 = 1251;
 	float s18 = 884;
 
 	float s23 = 154.5;
 	float s24 = 217.5;
 	float s25 = 95.5;
 	float s26 = 734.5;
-	float s27 = 1237;
+	float s27 = 1146;
 	float s28 = 896.5;
 
 	float s34 = 153.5;
 	float s35 = 96.5;
 	float s36 = 749.5;
-	float s37 = 1033;
+	float s37 = 1032;
 	float s38 = 746.5;
 
 	float s45 = 123.5;
 	float s46 = 899.5;
-	float s47 = 1236;
+	float s47 = 1145.5;
 	float s48 = 729.5;
 
 	float s56 = 793.5;
@@ -147,13 +181,6 @@ int GetDistancesMatrix(CvMat* S) {
 	CV_MAT_ELEM(*S, float, 1, 2) = s67;
 	CV_MAT_ELEM(*S, float, 1, 3) = s68;
 	CV_MAT_ELEM(*S, float, 2, 3) = s78;
-
-	//CV_MAT_ELEM(*S, float, 0, 1) = 77.5;
-	//CV_MAT_ELEM(*S, float, 0, 2) = 177.5;
-	//CV_MAT_ELEM(*S, float, 0, 3) = 162.0;
-	//CV_MAT_ELEM(*S, float, 1, 2) = 160.0;
-	//CV_MAT_ELEM(*S, float, 1, 3) = 191.5;
-	//CV_MAT_ELEM(*S, float, 2, 3) = 104.5;
 
 	return EOK;
 }

@@ -1,59 +1,40 @@
 ﻿#include "main.h"
 
+
 int main(int argc, char* argv[]) {
-
-	//IplImage* image = cvCreateImage(cvSize(200, 150), IPL_DEPTH_8U, 3);
-	//SetImagePixels(pixel(100, 3), image);
-
-	//Pixel pix;
-	//GetPixelValue(image, cvPoint(20, 40), &pix);
-
-	//SetPixelValue(image, cvPoint(20, 40), pixel(55, 3));
-
 	CvMat* S = cvCreateMat(4, 4, CV_32FC1); // matrix that stores the distances of the LEDs from each other, constant
 	GetDistancesMatrix(S);
-
-	//CvPoint2D32f P[4] = { // target points (x,y) in camera coordinates
-	//	cvPoint2D32f(-2.214,-0.936),
-	//	cvPoint2D32f(-2.564, 1.420),
-	//	cvPoint2D32f(2.442, 1.948),
-	//	cvPoint2D32f(2.657,-1.143)
-	//};
 	
-	// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BERCI --------------------------------------//
-	//IplImage* image = cvLoadImage("base.png", 0);
-	//IplImage* image = cvLoadImage("5_rot.png", 0);	
-	IplImage* image = cvLoadImage("13m_rot.png", 0);
-	IplImage* image_binary = cvCloneImage(image);
-	CreateBinary(image, image_binary, 180);
+	IplImage* image = cvLoadImage("image_6997_0.png", 0);
 	if (image == NULL) {
-		printf("Image not found!");
+		printf("ERROR: Image not found!");
 		return -1;
 	}
-	uchar* binary_data = (uchar*)image_binary->imageData;
+	IplImage* image_binary = cvCloneImage(image);
+
+	ERROR ecode = CreateBinary(image, image_binary, 180);
+	if (ERREVAL(ecode)) {
+		EPRINT(ecode);
+		return -1;
+	}
 
 	CvPoint start = cvPoint(0, 0);
-	Array point_set[total_points];
-	CvPoint centers[total_points];
+	Array point_set[TOTAL_POINTS];
+	CvPoint2D32f centers[TOTAL_POINTS];
 
 	FindAllCenters(image_binary, start, point_set, centers);
 
-	CvPoint points3678[4];
+	CvPoint2D32f points3678[4];
 	ChoosePoints3678(centers, points3678);
 	
-	//points3678 has the 4 points' coordinates in the same order as showing in the name (3, 6, 7, 8)
-	
-	// -------------------------------------- BERCI <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<//
-
-	CvPoint2D32f P[4] = { // target points (x,y) in camera coordinates
-		cvPoint2D32f(-0.3916,-0.209),
-		cvPoint2D32f(-0.5346,0.4642),
-		cvPoint2D32f(0.275,0.4642),
-		cvPoint2D32f(0.2816,-0.3454)
-	};
+	CvPoint2D32f C[4]; // target points (x,y) in camera coordinates
+	PixelToCameraCoordinate(points3678, C);
 
 	CvPoint3D32f points[4]; // returned 4 points (x,y,z) are stored in this array
-	GetP4PAbidi(S, P, points);
+	GetP4PAbidi(S, C, points);
+
+
+
 
 	// cvPoint(col,row) <- this is native to OpenCv
 	CvPoint points_L[3] = {
@@ -79,7 +60,7 @@ int main(int argc, char* argv[]) {
 	IplImage* output = cvCreateImage(cvSize(image->width, image->height), IPL_DEPTH_8U, 3);
 	cvConvertImage(image, output, CV_GRAY2BGR);
 
-	for (int point_num = 0; point_num < total_points; point_num++) {
+	for (int point_num = 0; point_num < TOTAL_POINTS; point_num++) {
 		// draw contour
 		for (int i = 1; i < point_set[point_num].used; i++) {
 			// draw contour line to output image
@@ -114,9 +95,10 @@ int main(int argc, char* argv[]) {
 	cvWaitKey(0);
 	cvReleaseImage(&image);
 	cvDestroyAllWindows();
-	for (int point_num = 0; point_num < total_points; point_num++) {
+	for (int point_num = 0; point_num < TOTAL_POINTS; point_num++) {
 		FreeArray(&point_set[point_num]);
 	}
 	// -------------------------------------- BERCI VISUALIZATION --------------------------------------------//
+
 	return 0;
 }
