@@ -24,12 +24,18 @@
     <ClInclude Include="perspective.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="point_selection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core_imgproc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="perspective.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="point_selection.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
