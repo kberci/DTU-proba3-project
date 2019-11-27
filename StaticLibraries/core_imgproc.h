@@ -14,3 +14,6 @@
 
 
 int CreateBinary(const IplImage* frame, IplImage* binary, const int threshold);
+int UndistortImage(const IplImage* distorted, IplImage* undistorted, const CvMat* K);
+int InterpolatePixelValue(IplImage* image, CvPoint2D32f p);
+int GetCameraIntrinsicMatrix(CvMat* K);

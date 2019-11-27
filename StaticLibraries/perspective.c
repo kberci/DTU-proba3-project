@@ -4,16 +4,14 @@ int cmpfunc(const void* a, const void* b) {
 	return (*(int*)a - *(int*)b);
 }
 
-int PixelToCameraCoordinate(const CvPoint2D32f P[4], CvPoint2D32f C[4]) {
+int PixelToCameraCoordinate(const CvPoint2D32f P[4], CvPoint2D32f C[4], const CvMat* K) {
 	for (int i = 0; i < 4; i++) {
-		//C[i].x = (P[i].x - 1152) * 0.0022;
-		//C[i].y = (P[i].y -  768) * 0.0022;
 		//TODO: check fx and fy  this gives 6times in z for the output in abidi?
-		float fx = 0.006 / 2.2e-6;
-		float fy = 0.006 / 2.2e-6;
-		float cx = 1151.0;
-		float cy = 767.0;
-		float s  = 0;
+		float fx = CV_MAT_ELEM(*K, float, 0, 0);
+		float fy = CV_MAT_ELEM(*K, float, 1, 1);
+		float s  = CV_MAT_ELEM(*K, float, 0, 1);
+		float cx = CV_MAT_ELEM(*K, float, 0, 2);
+		float cy = CV_MAT_ELEM(*K, float, 1, 2);
 
 		C[i].x = (P[i].x * fy - P[i].y * s - cx * fy + cy * s) / (fx * fy);
 		C[i].y = (P[i].y - cy) / fy;
@@ -23,7 +21,6 @@ int PixelToCameraCoordinate(const CvPoint2D32f P[4], CvPoint2D32f C[4]) {
 }
 
 int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
-
 	float s12 = CV_MAT_ELEM(*S, float, 0, 1);
 	float s13 = CV_MAT_ELEM(*S, float, 0, 2);
 	float s14 = CV_MAT_ELEM(*S, float, 0, 3);
@@ -125,10 +122,14 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
 		float d3 = (C13 * F3 / F1) * d1;
 		float d4 = (C14 * F4 / F1) * d1;
 
-		P1[i] = cvPoint3D32f((-x1 / F1) * d1, (-y1 / F1) * d1, f + (f / F1) * d1);
-		P2[i] = cvPoint3D32f((-x2 / F2) * d2, (-y2 / F2) * d2, f + (f / F2) * d2);
-		P3[i] = cvPoint3D32f((-x3 / F3) * d3, (-y3 / F3) * d3, f + (f / F3) * d3);
-		P4[i] = cvPoint3D32f((-x4 / F4) * d4, (-y4 / F4) * d4, f + (f / F4) * d4);
+		//P1[i] = cvPoint3D32f((-x1 / F1) * d1, (-y1 / F1) * d1, f + (f / F1) * d1);
+		//P2[i] = cvPoint3D32f((-x2 / F2) * d2, (-y2 / F2) * d2, f + (f / F2) * d2);
+		//P3[i] = cvPoint3D32f((-x3 / F3) * d3, (-y3 / F3) * d3, f + (f / F3) * d3);
+		//P4[i] = cvPoint3D32f((-x4 / F4) * d4, (-y4 / F4) * d4, f + (f / F4) * d4);
+		P1[i] = cvPoint3D32f((-x1 / F1) * d1, (-y1 / F1) * d1, f + (1 / F1) * d1);
+		P2[i] = cvPoint3D32f((-x2 / F2) * d2, (-y2 / F2) * d2, f + (1 / F2) * d2);
+		P3[i] = cvPoint3D32f((-x3 / F3) * d3, (-y3 / F3) * d3, f + (1 / F3) * d3);
+		P4[i] = cvPoint3D32f((-x4 / F4) * d4, (-y4 / F4) * d4, f + (1 / F4) * d4);
 	}
 
 	out[0] = cvPoint3D32f((P1[2].x + P1[3].x) / 2, (P1[2].y + P1[3].y) / 2, (P1[2].z + P1[3].z) / 2);
