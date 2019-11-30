@@ -64,6 +64,8 @@ int main(int argc, char* argv[]) {
 	Euler euler_deg;
 	RadiansToDegreesEulers(euler, &euler_deg);
 
+	//TODO: implement reprojection or maybe use matlab for that
+
 	printf("Relative orientation and position of target wrt camera\n");
 	printf("rotz: %f roty: %f rotx: %f\n", euler_deg.z, euler_deg.y, euler_deg.x);
 	printf("x: %f y: %f z: %f\n", points[1].x, points[1].y, points[1].z);
