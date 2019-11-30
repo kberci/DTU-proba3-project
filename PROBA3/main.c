@@ -3,6 +3,7 @@
 
 int main(int argc, char* argv[]) {
 	IplImage* raw_image = cvLoadImage("image_6997_0.png", 0);
+	//IplImage* raw_image = cvLoadImage("13m_rot.png", 0);
 	if (raw_image == NULL) {
 		printf("ERROR: Image not found!");
 		return -1;
@@ -54,8 +55,19 @@ int main(int argc, char* argv[]) {
 	CvPoint3D32f points[4]; // returned 4 points (x,y,z) are stored in this array
 	GetP4PAbidi(S, C, points);
 
+	CvMat* R = cvCreateMat(3, 3, CV_32FC1);
+	CalculateRotationMatrix(points, R);
 
+	Euler euler;
+	RotationMatrixToEuler(R, &euler);
 
+	Euler euler_deg;
+	RadiansToDegreesEulers(euler, &euler_deg);
+
+	printf("Relative orientation and position of target wrt camera\n");
+	printf("rotz: %f roty: %f rotx: %f\n", euler_deg.z, euler_deg.y, euler_deg.x);
+	printf("x: %f y: %f z: %f\n", points[1].x, points[1].y, points[1].z);
+	return 0;
 
 	// cvPoint(col,row) <- this is native to OpenCv
 	CvPoint points_L[3] = {

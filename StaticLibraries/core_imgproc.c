@@ -40,6 +40,7 @@ int UndistortImage(const IplImage* distorted, IplImage* undistorted, const CvMat
 
 	for (int j = 0; j < undistorted->height; j++) {
 		for (int i = 0; i < undistorted->width; i++) {
+			// apply the inverse of K to pixel coordinates
 			float x = (i * fy - j * s - cx * fy + cy * s) / (fx * fy);
 			float y = (j - cy) / fy;
 			float r = pow(x, 2) + pow(y, 2);
@@ -48,6 +49,7 @@ int UndistortImage(const IplImage* distorted, IplImage* undistorted, const CvMat
 			float xp = x * (1 + k1 * pow(r, 2) + k2 * pow(r, 4));
 			float yp = y * (1 + k1 * pow(r, 2) + k2 * pow(r, 4));
 
+			// apply K again to get back to pixel coords
 			float xpp = cx + xp * fx + yp * s;
 			float ypp = cy + yp * fy;
 			CvPoint2D32f distorted_pixel_coords = cvPoint2D32f(xpp, ypp);

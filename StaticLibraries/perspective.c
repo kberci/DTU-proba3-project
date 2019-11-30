@@ -13,6 +13,7 @@ int PixelToCameraCoordinate(const CvPoint2D32f P[4], CvPoint2D32f C[4], const Cv
 		float cx = CV_MAT_ELEM(*K, float, 0, 2);
 		float cy = CV_MAT_ELEM(*K, float, 1, 2);
 
+		// apply inverse of K to pixel coordinates to get to normalized coordinates
 		C[i].x = (P[i].x * fy - P[i].y * s - cx * fy + cy * s) / (fx * fy);
 		C[i].y = (P[i].y - cy) / fy;
 	}
@@ -98,6 +99,7 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
 	float F3 = sqrt(pow(x3, 2) + pow(y3, 2) + pow(f, 2));
 	float F4 = sqrt(pow(x4, 2) + pow(y4, 2) + pow(f, 2));
 
+	//TODO: calculate precision estimate from the 6 different d1s (as variance)
 	float d1s[6] = {
 		s12* F1* pow(H12s + pow(f, 2) * pow((1 - C12), 2), -0.5),
 		s13* F1* pow(H13s + pow(f, 2) * pow(1 - C13, 2), -0.5),
@@ -126,10 +128,10 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
 		//P2[i] = cvPoint3D32f((-x2 / F2) * d2, (-y2 / F2) * d2, f + (f / F2) * d2);
 		//P3[i] = cvPoint3D32f((-x3 / F3) * d3, (-y3 / F3) * d3, f + (f / F3) * d3);
 		//P4[i] = cvPoint3D32f((-x4 / F4) * d4, (-y4 / F4) * d4, f + (f / F4) * d4);
-		P1[i] = cvPoint3D32f((-x1 / F1) * d1, (-y1 / F1) * d1, f + (1 / F1) * d1);
-		P2[i] = cvPoint3D32f((-x2 / F2) * d2, (-y2 / F2) * d2, f + (1 / F2) * d2);
-		P3[i] = cvPoint3D32f((-x3 / F3) * d3, (-y3 / F3) * d3, f + (1 / F3) * d3);
-		P4[i] = cvPoint3D32f((-x4 / F4) * d4, (-y4 / F4) * d4, f + (1 / F4) * d4);
+		P1[i] = cvPoint3D32f((x1 / F1) * d1, (y1 / F1) * d1, 1 + (1 / F1) * d1);
+		P2[i] = cvPoint3D32f((x2 / F2) * d2, (y2 / F2) * d2, 1 + (1 / F2) * d2);
+		P3[i] = cvPoint3D32f((x3 / F3) * d3, (y3 / F3) * d3, 1 + (1 / F3) * d3);
+		P4[i] = cvPoint3D32f((x4 / F4) * d4, (y4 / F4) * d4, 1 + (1 / F4) * d4);
 	}
 
 	out[0] = cvPoint3D32f((P1[2].x + P1[3].x) / 2, (P1[2].y + P1[3].y) / 2, (P1[2].z + P1[3].z) / 2);
@@ -185,6 +187,75 @@ int GetDistancesMatrix(CvMat* S) {
 
 	return EOK;
 }
+
+
+int CalculateRotationMatrix(const CvPoint3D32f abidi[4], CvMat* R) {
+	float x1 = abidi[0].x - abidi[1].x;
+	float y1 = abidi[0].y - abidi[1].y;
+	float z1 = abidi[0].z - abidi[1].z;
+	float x2 = abidi[2].x - abidi[1].x;
+	float y2 = abidi[2].y - abidi[1].y;
+	float z2 = abidi[2].z - abidi[1].z;
+	float x3 = abidi[3].x - abidi[1].x;
+	float y3 = abidi[3].y - abidi[1].y;
+	float z3 = abidi[3].z - abidi[1].z;
+
+	float tx1 = 154.75;
+	float ty1 = 733.35;
+	float tz1 = 18.0;
+	float tx2 = 883.0;
+	float ty2 = 0.0;
+	float tz2 = 18.0;
+	float tx3 = 885.5;
+	float ty3 = 884.0;
+	float tz3 = 18.0;
+
+	float r1 = (ty1 * tz2 * x3 - ty1 * tz3 * x2 - ty2 * tz1 * x3 + ty2 * tz3 * x1 + ty3 * tz1 * x2 - ty3 * tz2 * x1) / (tx1 * ty2 * tz3 - tx1 * ty3 * tz2 - tx2 * ty1 * tz3 + tx2 * ty3 * tz1 + tx3 * ty1 * tz2 - tx3 * ty2 * tz1);
+	float r2 = -(tx1 * tz2 * x3 - tx1 * tz3 * x2 - tx2 * tz1 * x3 + tx2 * tz3 * x1 + tx3 * tz1 * x2 - tx3 * tz2 * x1) / (tx1 * ty2 * tz3 - tx1 * ty3 * tz2 - tx2 * ty1 * tz3 + tx2 * ty3 * tz1 + tx3 * ty1 * tz2 - tx3 * ty2 * tz1);
+	float r3 = (tx1 * ty2 * x3 - tx1 * ty3 * x2 - tx2 * ty1 * x3 + tx2 * ty3 * x1 + tx3 * ty1 * x2 - tx3 * ty2 * x1) / (tx1 * ty2 * tz3 - tx1 * ty3 * tz2 - tx2 * ty1 * tz3 + tx2 * ty3 * tz1 + tx3 * ty1 * tz2 - tx3 * ty2 * tz1);
+	float r4 = (ty1 * tz2 * y3 - ty1 * tz3 * y2 - ty2 * tz1 * y3 + ty2 * tz3 * y1 + ty3 * tz1 * y2 - ty3 * tz2 * y1) / (tx1 * ty2 * tz3 - tx1 * ty3 * tz2 - tx2 * ty1 * tz3 + tx2 * ty3 * tz1 + tx3 * ty1 * tz2 - tx3 * ty2 * tz1);
+	float r5 = -(tx1 * tz2 * y3 - tx1 * tz3 * y2 - tx2 * tz1 * y3 + tx2 * tz3 * y1 + tx3 * tz1 * y2 - tx3 * tz2 * y1) / (tx1 * ty2 * tz3 - tx1 * ty3 * tz2 - tx2 * ty1 * tz3 + tx2 * ty3 * tz1 + tx3 * ty1 * tz2 - tx3 * ty2 * tz1);
+	float r6 = (tx1 * ty2 * y3 - tx1 * ty3 * y2 - tx2 * ty1 * y3 + tx2 * ty3 * y1 + tx3 * ty1 * y2 - tx3 * ty2 * y1) / (tx1 * ty2 * tz3 - tx1 * ty3 * tz2 - tx2 * ty1 * tz3 + tx2 * ty3 * tz1 + tx3 * ty1 * tz2 - tx3 * ty2 * tz1);
+	float r7 = (ty1 * tz2 * z3 - ty1 * tz3 * z2 - ty2 * tz1 * z3 + ty2 * tz3 * z1 + ty3 * tz1 * z2 - ty3 * tz2 * z1) / (tx1 * ty2 * tz3 - tx1 * ty3 * tz2 - tx2 * ty1 * tz3 + tx2 * ty3 * tz1 + tx3 * ty1 * tz2 - tx3 * ty2 * tz1);
+	float r8 = -(tx1 * tz2 * z3 - tx1 * tz3 * z2 - tx2 * tz1 * z3 + tx2 * tz3 * z1 + tx3 * tz1 * z2 - tx3 * tz2 * z1) / (tx1 * ty2 * tz3 - tx1 * ty3 * tz2 - tx2 * ty1 * tz3 + tx2 * ty3 * tz1 + tx3 * ty1 * tz2 - tx3 * ty2 * tz1);
+	float r9 = (tx1 * ty2 * z3 - tx1 * ty3 * z2 - tx2 * ty1 * z3 + tx2 * ty3 * z1 + tx3 * ty1 * z2 - tx3 * ty2 * z1) / (tx1 * ty2 * tz3 - tx1 * ty3 * tz2 - tx2 * ty1 * tz3 + tx2 * ty3 * tz1 + tx3 * ty1 * tz2 - tx3 * ty2 * tz1);
+
+	CV_MAT_ELEM(*R, float, 0, 0) = r1;
+	CV_MAT_ELEM(*R, float, 0, 1) = r2;
+	CV_MAT_ELEM(*R, float, 0, 2) = r3;
+	CV_MAT_ELEM(*R, float, 1, 0) = r4;
+	CV_MAT_ELEM(*R, float, 1, 1) = r5;
+	CV_MAT_ELEM(*R, float, 1, 2) = r6;
+	CV_MAT_ELEM(*R, float, 2, 0) = r7;
+	CV_MAT_ELEM(*R, float, 2, 1) = r8;
+	CV_MAT_ELEM(*R, float, 2, 2) = r9;
+
+	return EOK;
+}
+
+
+int RotationMatrixToEuler(const CvMat* R, Euler* angles) {
+	float r1 = CV_MAT_ELEM(*R, float, 0, 0);
+	float r4 = CV_MAT_ELEM(*R, float, 1, 0);
+	float r7 = CV_MAT_ELEM(*R, float, 2, 0);
+	float r8 = CV_MAT_ELEM(*R, float, 2, 1);
+	float r9 = CV_MAT_ELEM(*R, float, 2, 2);
+
+	float sy = sqrt(pow(r1,2) + pow(r4,2));
+	angles->z = atan2(r4, r1);
+	angles->y = atan2(-r7, sy);
+	angles->x = atan2(r8, r9);
+
+	return EOK;
+}
+
+
+int RadiansToDegreesEulers(const Euler angles_rad, Euler* angles_deg) {
+	angles_deg->x = angles_rad.x * 180.0 / M_PI;
+	angles_deg->y = angles_rad.y * 180.0 / M_PI;
+	angles_deg->z = angles_rad.z * 180.0 / M_PI;
+}
+
 
 int CalculateAffineTransform(CvPoint points_L[], CvPoint points_R[], Affine* ret) {
 	float x1 = (float)points_L[0].x;
