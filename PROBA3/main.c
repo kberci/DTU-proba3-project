@@ -2,8 +2,8 @@
 
 
 int main(int argc, char* argv[]) {
-	IplImage* raw_image = cvLoadImage("image_6997_0.png", 0);
-	//IplImage* raw_image = cvLoadImage("13m_rot.png", 0);
+	//IplImage* raw_image = cvLoadImage("image_6997_0.png", 0);
+	IplImage* raw_image = cvLoadImage("13m_rot.png", 0);
 	if (raw_image == NULL) {
 		printf("ERROR: Image not found!");
 		return -1;
