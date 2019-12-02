@@ -52,8 +52,9 @@ int main(int argc, char* argv[]) {
 	CvMat* S = cvCreateMat(4, 4, CV_32FC1); // matrix that stores the distances of the LEDs from each other, constant
 	GetDistancesMatrix(S);
 
+	float confidence;
 	CvPoint3D32f points[4]; // returned 4 points (x,y,z) are stored in this array
-	GetP4PAbidi(S, C, points);
+	GetP4PAbidi(S, C, points, &confidence);
 
 	CvMat* R = cvCreateMat(3, 3, CV_32FC1);
 	CalculateRotationMatrix(points, R);
@@ -193,8 +194,9 @@ int test(int argc, char* argv[]) {
 			CvPoint2D32f C[4]; // target points (x,y) in camera coordinates
 			PixelToCameraCoordinate(points3678, C, K);
 
+			float confidence;
 			CvPoint3D32f points[4]; // returned 4 points (x,y,z) are stored in this array
-			GetP4PAbidi(S, C, points);
+			GetP4PAbidi(S, C, points, &confidence);
 			printf("z: %.6f\n",points[0].z / 6.0);
 
 			IplImage* output = cvCreateImage(cvSize(image->width, image->height), IPL_DEPTH_8U, 3);

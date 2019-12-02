@@ -21,7 +21,7 @@ int PixelToCameraCoordinate(const CvPoint2D32f P[4], CvPoint2D32f C[4], const Cv
 	return EOK;
 }
 
-int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
+int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4], float* confidence) {
 	float s12 = CV_MAT_ELEM(*S, float, 0, 1);
 	float s13 = CV_MAT_ELEM(*S, float, 0, 2);
 	float s14 = CV_MAT_ELEM(*S, float, 0, 3);
@@ -99,7 +99,6 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
 	float F3 = sqrt(pow(x3, 2) + pow(y3, 2) + pow(f, 2));
 	float F4 = sqrt(pow(x4, 2) + pow(y4, 2) + pow(f, 2));
 
-	//TODO: calculate precision estimate from the 6 different d1s (as variance)
 	float d1s[6] = {
 		s12* F1* pow(H12s + pow(f, 2) * pow((1 - C12), 2), -0.5),
 		s13* F1* pow(H13s + pow(f, 2) * pow(1 - C13, 2), -0.5),
@@ -111,6 +110,18 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
 
 	// TODO: check if this sorting also always sorts the (x,y,z) values for the Ps (then only need to compute 2,3 and take average -> median)
 	qsort(d1s, 6, sizeof(float), cmpfunc);
+
+	float mean = 0.0;
+	for (int i = 0; i < 6; i++) {
+		mean += d1s[i];
+	}
+	mean /= 6.0;
+	float variance = 0.0;
+	for (int i = 0; i < 6; i++) {
+		variance += pow(d1s[i] - mean, 2);
+	}
+	variance /= 6.0;
+	float std_dev = sqrt(variance);
 
 	CvPoint3D32f P1[6];
 	CvPoint3D32f P2[6];
@@ -128,6 +139,7 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
 		//P2[i] = cvPoint3D32f((-x2 / F2) * d2, (-y2 / F2) * d2, f + (f / F2) * d2);
 		//P3[i] = cvPoint3D32f((-x3 / F3) * d3, (-y3 / F3) * d3, f + (f / F3) * d3);
 		//P4[i] = cvPoint3D32f((-x4 / F4) * d4, (-y4 / F4) * d4, f + (f / F4) * d4);
+		//TODO: check how the z should be calculated
 		P1[i] = cvPoint3D32f((x1 / F1) * d1, (y1 / F1) * d1, 1 + (1 / F1) * d1);
 		P2[i] = cvPoint3D32f((x2 / F2) * d2, (y2 / F2) * d2, 1 + (1 / F2) * d2);
 		P3[i] = cvPoint3D32f((x3 / F3) * d3, (y3 / F3) * d3, 1 + (1 / F3) * d3);
@@ -138,6 +150,8 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4]) {
 	out[1] = cvPoint3D32f((P2[2].x + P2[3].x) / 2, (P2[2].y + P2[3].y) / 2, (P2[2].z + P2[3].z) / 2);
 	out[2] = cvPoint3D32f((P3[2].x + P3[3].x) / 2, (P3[2].y + P3[3].y) / 2, (P3[2].z + P3[3].z) / 2);
 	out[3] = cvPoint3D32f((P4[2].x + P4[3].x) / 2, (P4[2].y + P4[3].y) / 2, (P4[2].z + P4[3].z) / 2);
+
+	*confidence = std_dev;
 
 	return EOK;
 }
