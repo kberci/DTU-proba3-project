@@ -40,6 +40,8 @@ int FindStart(const IplImage* image, CvPoint* start) {
 			}
 		}
 	}
+
+	return EINVALID;
 }
 
 #define M_PI acos(-1.0)
@@ -62,6 +64,7 @@ int FindContour(const IplImage* frame, CvPoint start, Array* point_set, CvPoint 
 
 	// check 3 neighbors
 	for (int k = 0; k < 3; k++) {
+		//TODO: handle case where indices are out of bounds
 		int check_y = p.y - (int)cos(angle + (k * M_PI / 2));
 		int check_x = p.x + (int)sin(angle + (k * M_PI / 2));
 		int value = data[check_x + check_y * frame->widthStep];
@@ -220,7 +223,12 @@ int FindCenter_with_Moments(const IplImage* image, Array point_set, CvPoint2D32f
 int FindAllCenters(IplImage* image, CvPoint start, Array* point_set, CvPoint2D32f* centers) {
 	for (int point_num = 0; point_num < TOTAL_POINTS; point_num++) {
 		InitArray(&point_set[point_num], 1);
-		FindStart(image, &start);
+		ERROR e = FindStart(image, &start);
+		if (ERREVAL(e)) {
+			return EINVALID;
+		}
+		//printf("OK\n");
+
 		//FindBorder(image, start, &point_set[point_num]);
 		FindContour(image, start, &point_set[point_num], cvPoint(NULL, NULL), cvPoint(NULL, NULL));
 
