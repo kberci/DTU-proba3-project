@@ -2,8 +2,8 @@
 
 
 int main(int argc, char* argv[]) {
-	//IplImage* raw_image = cvLoadImage("image_6997_0.png", 0);
-	IplImage* raw_image = cvLoadImage("13m_rot.png", 0);
+	// read image
+	IplImage* raw_image = cvLoadImage("D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/0.png", 0);
 	if (raw_image == NULL) {
 		printf("ERROR: Image not found!");
 		return -1;
@@ -14,24 +14,9 @@ int main(int argc, char* argv[]) {
 	
 	IplImage* undistorted = cvCreateImage(cvSize(raw_image->width, raw_image->height), IPL_DEPTH_8U, 1);
 	UndistortImage(raw_image, undistorted, K);
-
-	//IplImage* difference = cvCreateImage(cvSize(raw_image->width, raw_image->height), IPL_DEPTH_8U, 1);
-	//uchar* data_difference = (uchar*)difference->imageData;
-	//uchar* data_corrected = (uchar*)undistorted->imageData;
-	//uchar* data_raw = (uchar*)raw_image->imageData;
-	//for (int j = 0; j < difference->height; j++) {
-	//	for (int i = 0; i < difference->width; i++) {
-	//		int index = i + j * difference->widthStep;
-	//		float val = abs(data_raw[index] - data_corrected[index]);
-	//		if (val > 0) {
-	//			val += 200;
-	//		}
-	//		data_difference[index] = val;
-	//	}
-	//}
 	
 	IplImage* image_binary = cvCloneImage(undistorted);
-	ERROR ecode = CreateBinary(undistorted, image_binary, 180);
+	ERROR ecode = CreateBinary(undistorted, image_binary, 220);
 	if (ERREVAL(ecode)) {
 		EPRINT(ecode);
 		return -1;
@@ -40,8 +25,11 @@ int main(int argc, char* argv[]) {
 	CvPoint start = cvPoint(0, 0);
 	Array point_set[TOTAL_POINTS];
 	CvPoint2D32f centers[TOTAL_POINTS];
-
-	FindAllCenters(image_binary, start, point_set, centers);
+	ecode = FindAllCenters(image_binary, start, point_set, centers);
+	if (ERREVAL(ecode)) {
+		EPRINT(ecode);
+		return -1;
+	}
 
 	CvPoint2D32f points3678[4];
 	ChoosePoints3678(centers, points3678);
@@ -151,7 +139,7 @@ CvCapture* capture;
 //TODO: check point selection method for errors (i.e. how well it finds the 4 point correspondances)
 //TODO: check if grabbed image from camera needs to be flipped or not
 
-int test(int argc, char* argv[]) {
+int main_loop(int argc, char* argv[]) {
 	CvMat* S = cvCreateMat(4, 4, CV_32FC1); // matrix that stores the distances of the LEDs from each other, constant
 	GetDistancesMatrix(S);
 
@@ -172,21 +160,44 @@ int test(int argc, char* argv[]) {
 		frame = cvRetrieveFrame(capture, 0);
 		if (frame != NULL) {
 			CvSize size = cvSize(frame->width, frame->height);
-			IplImage* image = cvCreateImage(size, frame->depth, 1);
-			cvConvertImage(frame, image, CV_BGR2GRAY);
-			IplImage* image_binary = cvCloneImage(image);
+			IplImage* raw_image = cvCreateImage(size, frame->depth, 1);
+			cvConvertImage(frame, raw_image, CV_BGR2GRAY);
 
-			ERROR ecode = CreateBinary(image, image_binary, 180);
+
+			IplImage* undistorted = cvCreateImage(cvSize(raw_image->width, raw_image->height), IPL_DEPTH_8U, 1);
+			UndistortImage(raw_image, undistorted, K);
+
+			//IplImage* difference = cvCreateImage(cvSize(raw_image->width, raw_image->height), IPL_DEPTH_8U, 1);
+			//uchar* data_difference = (uchar*)difference->imageData;
+			//uchar* data_corrected = (uchar*)undistorted->imageData;
+			//uchar* data_raw = (uchar*)raw_image->imageData;
+			//for (int j = 0; j < difference->height; j++) {
+			//	for (int i = 0; i < difference->width; i++) {
+			//		int index = i + j * difference->widthStep;
+			//		float val = abs(data_raw[index] - data_corrected[index]);
+			//		if (val > 0) {
+			//			val += 200;
+			//		}
+			//		data_difference[index] = val;
+			//	}
+			//}
+
+			IplImage* image_binary = cvCloneImage(undistorted);
+			ERROR ecode = CreateBinary(undistorted, image_binary, 240);
 			if (ERREVAL(ecode)) {
 				EPRINT(ecode);
-				return -1;
+				continue;
 			}
 
 			CvPoint start = cvPoint(0, 0);
 			Array point_set[TOTAL_POINTS];
 			CvPoint2D32f centers[TOTAL_POINTS];
-
-			FindAllCenters(image_binary, start, point_set, centers);
+			ecode = FindAllCenters(image_binary, start, point_set, centers);
+			if (ERREVAL(ecode)) {
+				EPRINT(ecode);
+				printf("Skipping frame!\n");
+				continue;
+			}
 
 			CvPoint2D32f points3678[4];
 			ChoosePoints3678(centers, points3678);
@@ -194,13 +205,33 @@ int test(int argc, char* argv[]) {
 			CvPoint2D32f C[4]; // target points (x,y) in camera coordinates
 			PixelToCameraCoordinate(points3678, C, K);
 
+			CvMat* S = cvCreateMat(4, 4, CV_32FC1); // matrix that stores the distances of the LEDs from each other, constant
+			GetDistancesMatrix(S);
+
 			float confidence;
 			CvPoint3D32f points[4]; // returned 4 points (x,y,z) are stored in this array
 			GetP4PAbidi(S, C, points, &confidence);
-			printf("z: %.6f\n",points[0].z / 6.0);
 
-			IplImage* output = cvCreateImage(cvSize(image->width, image->height), IPL_DEPTH_8U, 3);
-			cvConvertImage(image, output, CV_GRAY2BGR);
+			CvMat* R = cvCreateMat(3, 3, CV_32FC1);
+			CalculateRotationMatrix(points, R);
+
+			Euler euler;
+			RotationMatrixToEuler(R, &euler);
+
+			Euler euler_deg;
+			RadiansToDegreesEulers(euler, &euler_deg);
+
+			//TODO: implement reprojection or maybe use matlab for that
+
+			printf("Relative orientation and position of target wrt camera\n");
+			printf("rotz: %f roty: %f rotx: %f\n", euler_deg.z, euler_deg.y, euler_deg.x);
+			printf("x: %f y: %f z: %f\n", points[1].x, points[1].y, points[1].z);
+
+
+
+
+			IplImage* output = cvCreateImage(cvSize(raw_image->width, raw_image->height), IPL_DEPTH_8U, 3);
+			cvConvertImage(raw_image, output, CV_GRAY2BGR);
 
 			for (int point_num = 0; point_num < TOTAL_POINTS; point_num++) {
 				// draw contour
