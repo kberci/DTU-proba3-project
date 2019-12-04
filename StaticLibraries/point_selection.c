@@ -233,9 +233,9 @@ int FindAllCenters(IplImage* image, CvPoint start, Array* point_set, CvPoint2D32
 		FindContour(image, start, &point_set[point_num], cvPoint(NULL, NULL), cvPoint(NULL, NULL));
 
 		FindCenter_with_Centroid(point_set[point_num], &centers[point_num]);
-		printf("Centroid center: x=%f, y=%f\n", centers->x, centers->y);
+		printf("Centroid center: x=%f, y=%f\n", centers[point_num].x, centers[point_num].y);
 		FindCenter_with_Moments(image, point_set[point_num], &centers[point_num]);
-		printf("Moment center:\t x=%f, y=%f\n\n", centers->x, centers->y);
+		printf("Moment center:\t x=%f, y=%f\n\n", centers[point_num].x, centers[point_num].y);
 		FillInside(image, point_set[point_num]);
 	}
 

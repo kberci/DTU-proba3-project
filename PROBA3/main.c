@@ -3,7 +3,7 @@
 
 int main(int argc, char* argv[]) {
 	// read image
-	IplImage* raw_image = cvLoadImage("D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/0.png", 0);
+	IplImage* raw_image = cvLoadImage("C:/Users/Kovacs Bertalan/Desktop/Image Analysis/1/multiple_same_setup_0_5.png", 0);
 	if (raw_image == NULL) {
 		printf("ERROR: Image not found!");
 		return -1;
@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 	UndistortImage(raw_image, undistorted, K);
 	
 	IplImage* image_binary = cvCloneImage(undistorted);
-	ERROR ecode = CreateBinary(undistorted, image_binary, 220);
+	ERROR ecode = CreateBinary(undistorted, image_binary, 200);
 	if (ERREVAL(ecode)) {
 		EPRINT(ecode);
 		return -1;
