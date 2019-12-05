@@ -128,6 +128,11 @@ int FindBorder(const IplImage* image, CvPoint start, Array* point_set) {
 		}
 	}
 
+	if (point_set->used < 10) {
+		FillInside(image, *point_set);
+		return EINVAL;
+	}
+
 	return EOK;
 }
 
@@ -223,14 +228,20 @@ int FindCenter_with_Moments(const IplImage* image, Array point_set, CvPoint2D32f
 int FindAllCenters(IplImage* image, CvPoint start, Array* point_set, CvPoint2D32f* centers) {
 	for (int point_num = 0; point_num < TOTAL_POINTS; point_num++) {
 		InitArray(&point_set[point_num], 1);
-		ERROR e = FindStart(image, &start);
-		if (ERREVAL(e)) {
+		ERROR e_start = FindStart(image, &start);
+		if (ERREVAL(e_start)) {
 			return EINVALID;
 		}
-		//printf("OK\n");
-
-		//FindBorder(image, start, &point_set[point_num]);
-		FindContour(image, start, &point_set[point_num], cvPoint(NULL, NULL), cvPoint(NULL, NULL));
+		ERROR e_border = FindBorder(image, start, &point_set[point_num]);
+		while (ERREVAL(e_border)) {
+			InitArray(&point_set[point_num], 1);
+			e_start = FindStart(image, &start);
+			if (ERREVAL(e_start)) {
+				return EINVALID;
+			}
+			e_border = FindBorder(image, start, &point_set[point_num]);
+		}
+		//FindContour(image, start, &point_set[point_num], cvPoint(NULL, NULL), cvPoint(NULL, NULL));
 
 		FindCenter_with_Centroid(point_set[point_num], &centers[point_num]);
 		printf("Centroid center: x=%f, y=%f\n", centers[point_num].x, centers[point_num].y);
