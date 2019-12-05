@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 
 	FILE* fp;
 	fopen_s(&fp, "results.csv", "a");
-	fprintf(fp, "rot_x,rot_y,rot_z,x,y,z,confidence\n");
+	fprintf(fp, "file,rot_x,rot_y,rot_z,x,y,z,confidence,p0x,p0y,p1x,p1y,p2x,p2y,p3x,p3y\n");
 
 	for (int i = 0; i < 20; i++) {
 		printf("Processing %d ...  ", i);
@@ -54,7 +54,8 @@ int main(int argc, char* argv[]) {
 		//printf("Confidence %f\n", confidence);
 		//printf("rotz: %f roty: %f rotx: %f\n", euler_deg.z, euler_deg.y, euler_deg.x);
 		//printf("x: %f y: %f z: %f\n", points[1].x, points[1].y, points[1].z);
-		fprintf(fp, "%f,%f,%f,%f,%f,%f,%f\n", euler_deg.x, euler_deg.y, euler_deg.z, points[1].x, points[1].y, points[1].z, confidence);
+		fprintf(fp, "%s,%f,%f,%f,%f,%f,%f,%f,", files+i,euler_deg.x, euler_deg.y, euler_deg.z, points[1].x, points[1].y, points[1].z, confidence);
+		fprintf(fp, "%f,%f,%f,%f,%f,%f,%f,%f\n", points3678[0].x, points3678[0].y, points3678[1].x, points3678[1].y, points3678[2].x, points3678[2].y, points3678[3].x, points3678[3].y);
 		printf("Done\n");
 	}
 
