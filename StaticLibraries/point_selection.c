@@ -164,19 +164,61 @@ int FillInside(const IplImage* image, Array point_set) {
 	return EOK;
 }
 
-int FindCenter(Array point_set, CvPoint2D32f* center) {
+int FindCenter_with_Centroid(Array point_set, CvPoint2D32f* centroidCenter) {
 	int sumX = 0;
 	int sumY = 0;
 	for (int i = 0; i < point_set.used; i++) {
 		sumX += point_set.array[i].x;
 		sumY += point_set.array[i].y;
 	}
-	center->x = (float)sumX / (float)point_set.used;
-	center->y = (float)sumY / (float)point_set.used;
+	centroidCenter->x = (float)sumX / (float)point_set.used;
+	centroidCenter->y = (float)sumY / (float)point_set.used;
 
 	return EOK;
 }
 
+int FindCenter_with_Moments(const IplImage* image, Array point_set, CvPoint2D32f* momentCenter) {
+	double m00 = 0;
+	double m10 = 0;
+	double m01 = 0;
+
+	int ws = image->widthStep;
+	int h = image->height;
+	uchar* image_data = (uchar*)image->imageData;
+
+	int y_min = h;
+	int y_max = 0;
+	for (int i = 0; i < point_set.used; i++) {
+		if (point_set.array[i].y < y_min)
+			y_min = point_set.array[i].y;
+		if (point_set.array[i].y > y_max)
+			y_max = point_set.array[i].y;
+	}
+
+	for (int j = y_min; j <= y_max; j++) {
+		int x_min = ws;
+		int x_max = 0;
+		for (int i = 0; i < point_set.used; i++) {
+			if (point_set.array[i].y == j) {
+				if (point_set.array[i].x < x_min)
+					x_min = point_set.array[i].x;
+				if (point_set.array[i].x > x_max)
+					x_max = point_set.array[i].x;
+			}
+		}
+		for (int k = x_min; k <= x_max; k++) {
+			double bij = (double)image_data[k + j * ws] / 255.0;
+			m00 += bij;
+			m10 += (double)k * bij;
+			m01 += (double)j * bij;
+		}
+	}
+
+	momentCenter->x = m10 / m00;
+	momentCenter->y = m01 / m00;
+	
+	return EOK;
+}
 
 int FindAllCenters(IplImage* image, CvPoint start, Array* point_set, CvPoint2D32f* centers) {
 	for (int point_num = 0; point_num < TOTAL_POINTS; point_num++) {
@@ -189,8 +231,12 @@ int FindAllCenters(IplImage* image, CvPoint start, Array* point_set, CvPoint2D32
 
 		//FindBorder(image, start, &point_set[point_num]);
 		FindContour(image, start, &point_set[point_num], cvPoint(NULL, NULL), cvPoint(NULL, NULL));
+
+		FindCenter_with_Centroid(point_set[point_num], &centers[point_num]);
+		printf("Centroid center: x=%f, y=%f\n", centers[point_num].x, centers[point_num].y);
+		FindCenter_with_Moments(image, point_set[point_num], &centers[point_num]);
+		printf("Moment center:\t x=%f, y=%f\n\n", centers[point_num].x, centers[point_num].y);
 		FillInside(image, point_set[point_num]);
-		FindCenter(point_set[point_num], &centers[point_num]);
 	}
 
 	return EOK;
