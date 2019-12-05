@@ -1,11 +1,11 @@
 #pragma once
 
-#include<stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
 
-#include<cv.h>
+#include <cv.h>
 #include <highgui.h>
 
 #include "error_codes.h"
