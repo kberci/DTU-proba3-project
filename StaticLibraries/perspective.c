@@ -76,7 +76,7 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4], fl
 	float H42s = pow((x4 - C42 * x2), 2) + pow((y4 - C42 * y2), 2);
 	float H43s = pow((x4 - C43 * x3), 2) + pow((y4 - C43 * y3), 2);
 	
-	float f = 6;
+	float f = 6.2278;
 
 	float f123 = sqrt((pow(s13, 2) * H12s - pow(s12, 2) * H13s) / (pow(s12, 2) * pow(1 - C13, 2) - pow(s13, 2) * pow(1 - C12, 2)));
 	float f124 = sqrt((pow(s14, 2) * H12s - pow(s12, 2) * H14s) / (pow(s12, 2) * pow(1 - C14, 2) - pow(s14, 2) * pow(1 - C12, 2)));

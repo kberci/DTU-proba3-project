@@ -2,129 +2,88 @@
 
 
 int main(int argc, char* argv[]) {
-	// read image
-	IplImage* raw_image = cvLoadImage("D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/0.png", 0);
-	if (raw_image == NULL) {
-		printf("ERROR: Image not found!");
-		return -1;
-	}
+	char files[20][1000] = {
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/0.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/50.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/100.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/150.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/200.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/250.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/300.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_1.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_2.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_3.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_4.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_5.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_6.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_7.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_8.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_9.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_10.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_11.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_12.png",
+		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_13.png"
+	};
 
 	CvMat* K = cvCreateMat(3, 3, CV_32FC1); // matrix that stores the (static) intrinsic parameters of the camera
 	GetCameraIntrinsicMatrix(K);
 	
-	IplImage* undistorted = cvCreateImage(cvSize(raw_image->width, raw_image->height), IPL_DEPTH_8U, 1);
-	UndistortImage(raw_image, undistorted, K);
-	
-	IplImage* image_binary = cvCloneImage(undistorted);
-	ERROR ecode = CreateBinary(undistorted, image_binary, 220);
-	if (ERREVAL(ecode)) {
-		EPRINT(ecode);
-		return -1;
-	}
-
-	CvPoint start = cvPoint(0, 0);
-	Array point_set[TOTAL_POINTS];
-	CvPoint2D32f centers[TOTAL_POINTS];
-	ecode = FindAllCenters(image_binary, start, point_set, centers);
-	if (ERREVAL(ecode)) {
-		EPRINT(ecode);
-		return -1;
-	}
-
-	CvPoint2D32f points3678[4];
-	ChoosePoints3678(centers, points3678);
-	
-	CvPoint2D32f C[4]; // target points (x,y) in camera coordinates
-	PixelToCameraCoordinate(points3678, C, K);
-
 	CvMat* S = cvCreateMat(4, 4, CV_32FC1); // matrix that stores the distances of the LEDs from each other, constant
 	GetDistancesMatrix(S);
 
-	float confidence;
-	CvPoint3D32f points[4]; // returned 4 points (x,y,z) are stored in this array
-	GetP4PAbidi(S, C, points, &confidence);
+	FILE* fp;
+	fopen_s(&fp, "results.csv", "a");
+	fprintf(fp, "rot_x,rot_y,rot_z,x,y,z,confidence\n");
 
-	CvMat* R = cvCreateMat(3, 3, CV_32FC1);
-	CalculateRotationMatrix(points, R);
+	for (int i = 0; i < 20; i++) {
+		printf("Processing %d ...  ", i);
+		// read image
+		IplImage* raw_image = cvLoadImage(files+i, 0);
+		if (raw_image == NULL) {
+			printf("ERROR: Image not found!");
+			return -1;
+		}
 
-	Euler euler;
-	RotationMatrixToEuler(R, &euler);
+		CvPoint2D32f points3678[4];
+		CvPoint3D32f points[4];
+		Euler euler_deg;
+		float confidence;
+		GetTargetPoseEstimate(raw_image, K, S, points3678, points, &euler_deg, &confidence);
 
-	Euler euler_deg;
-	RadiansToDegreesEulers(euler, &euler_deg);
+		//printf("Relative orientation and position of target wrt camera\n");
+		//printf("Confidence %f\n", confidence);
+		//printf("rotz: %f roty: %f rotx: %f\n", euler_deg.z, euler_deg.y, euler_deg.x);
+		//printf("x: %f y: %f z: %f\n", points[1].x, points[1].y, points[1].z);
+		fprintf(fp, "%f,%f,%f,%f,%f,%f,%f\n", euler_deg.x, euler_deg.y, euler_deg.z, points[1].x, points[1].y, points[1].z, confidence);
+		printf("Done\n");
+	}
 
-	//TODO: implement reprojection or maybe use matlab for that
-
-	printf("Relative orientation and position of target wrt camera\n");
-	printf("rotz: %f roty: %f rotx: %f\n", euler_deg.z, euler_deg.y, euler_deg.x);
-	printf("x: %f y: %f z: %f\n", points[1].x, points[1].y, points[1].z);
+	fclose(fp);
 	return 0;
+	
 
 	// cvPoint(col,row) <- this is native to OpenCv
-	CvPoint points_L[3] = {
-		cvPoint(1280,611),
-		cvPoint(1277,979),
-		cvPoint(974,673)
-	};
+	//CvPoint points_L[3] = {
+	//	cvPoint(1280,611),
+	//	cvPoint(1277,979),
+	//	cvPoint(974,673)
+	//};
 
-	CvPoint points_R[3] = {
-		cvPoint(1208,648),
-		cvPoint(1181,1016),
-		cvPoint(900,690)
-	};
+	//CvPoint points_R[3] = {
+	//	cvPoint(1208,648),
+	//	cvPoint(1181,1016),
+	//	cvPoint(900,690)
+	//};
 
-	Affine T;
-	CalculateAffineTransform(points_L, points_R, &T);
-	CvPoint2D32f pl;
-	ApplyAffineTransform(cvPoint2D32f(909,979), T, &pl);
+	//Affine T;
+	//CalculateAffineTransform(points_L, points_R, &T);
+	//CvPoint2D32f pl;
+	//ApplyAffineTransform(cvPoint2D32f(909,979), T, &pl);
 
 
-	// -------------------------------------- BERCI VISUALIZATION--------------------------------------------//
-	// output image conversion to 3 channels (so that contour can be coloured)
-	IplImage* output = cvCreateImage(cvSize(raw_image->width, raw_image->height), IPL_DEPTH_8U, 3);
-	cvConvertImage(raw_image, output, CV_GRAY2BGR);
 
-	for (int point_num = 0; point_num < TOTAL_POINTS; point_num++) {
-		// draw contour
-		for (int i = 1; i < point_set[point_num].used; i++) {
-			// draw contour line to output image
-			CvPoint p1 = cvPoint(point_set[point_num].array[i - 1].x, point_set[point_num].array[i - 1].y);
-			CvPoint p2 = cvPoint(point_set[point_num].array[i].x, point_set[point_num].array[i].y);
-			cvLine(output, p1, p2, cvScalar(0, 0, 255, 0), 1, 8, 0);
-		}
-		// draw center
-		for (int i = 1; i < point_set[point_num].used; i++) {
-			// draw center to output image
-			int cross_size = 5;
-			cvLine(output, cvPoint(centers[point_num].x - cross_size, centers[point_num].y - cross_size),
-				cvPoint(centers[point_num].x + cross_size, centers[point_num].y + cross_size), cvScalar(0, 255, 0, 0), 2, 0, 0);
-			cvLine(output, cvPoint(centers[point_num].x - cross_size, centers[point_num].y + cross_size),
-				cvPoint(centers[point_num].x + cross_size, centers[point_num].y - cross_size), cvScalar(0, 255, 0, 0), 2, 0, 0);
-		}
-	}
-	int cross_size = 2;
-	for (int point_num = 0; point_num < 4; point_num++) {
-		// cross on selected points:
-		cvLine(output, cvPoint(points3678[point_num].x - cross_size, points3678[point_num].y - cross_size),
-			cvPoint(points3678[point_num].x + cross_size, points3678[point_num].y + cross_size), cvScalar(255, 0, 0, 0), 2, 0, 0);
-		cvLine(output, cvPoint(points3678[point_num].x - cross_size, points3678[point_num].y + cross_size),
-			cvPoint(points3678[point_num].x + cross_size, points3678[point_num].y - cross_size), cvScalar(255, 0, 0, 0), 2, 0, 0);
-		cross_size += 3;
-	}
 
-	// show images
-	cvShowImage("Original image", raw_image);
-	cvShowImage("Contoured image", output);
 
-	cvWaitKey(0);
-	cvReleaseImage(&raw_image);
-	cvDestroyAllWindows();
-	for (int point_num = 0; point_num < TOTAL_POINTS; point_num++) {
-		FreeArray(&point_set[point_num]);
-	}
-	// -------------------------------------- BERCI VISUALIZATION --------------------------------------------//
-
-	return 0;
 }
 
 
