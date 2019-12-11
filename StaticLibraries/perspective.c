@@ -78,21 +78,31 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4], fl
 	
 	float f = 6.2278;
 
-	float f123 = sqrt((pow(s13, 2) * H12s - pow(s12, 2) * H13s) / (pow(s12, 2) * pow(1 - C13, 2) - pow(s13, 2) * pow(1 - C12, 2)));
-	float f124 = sqrt((pow(s14, 2) * H12s - pow(s12, 2) * H14s) / (pow(s12, 2) * pow(1 - C14, 2) - pow(s14, 2) * pow(1 - C12, 2)));
-	float f134 = sqrt((pow(s14, 2) * H13s - pow(s13, 2) * H14s) / (pow(s13, 2) * pow(1 - C14, 2) - pow(s14, 2) * pow(1 - C13, 2)));
-	float f213 = sqrt((pow(s23, 2) * H21s - pow(s12, 2) * H23s) / (pow(s12, 2) * pow(1 - C23, 2) - pow(s23, 2) * pow(1 - C21, 2)));
-	float f214 = sqrt((pow(s24, 2) * H21s - pow(s12, 2) * H24s) / (pow(s12, 2) * pow(1 - C24, 2) - pow(s24, 2) * pow(1 - C21, 2)));
-	float f234 = sqrt((pow(s24, 2) * H23s - pow(s23, 2) * H24s) / (pow(s23, 2) * pow(1 - C24, 2) - pow(s24, 2) * pow(1 - C23, 2)));
-	float f312 = sqrt((pow(s23, 2) * H31s - pow(s13, 2) * H32s) / (pow(s13, 2) * pow(1 - C32, 2) - pow(s23, 2) * pow(1 - C31, 2)));
-	float f314 = sqrt((pow(s34, 2) * H31s - pow(s13, 2) * H34s) / (pow(s13, 2) * pow(1 - C34, 2) - pow(s34, 2) * pow(1 - C31, 2)));
-	float f324 = sqrt((pow(s34, 2) * H32s - pow(s23, 2) * H34s) / (pow(s23, 2) * pow(1 - C34, 2) - pow(s34, 2) * pow(1 - C32, 2)));
-	float f412 = sqrt((pow(s24, 2) * H41s - pow(s14, 2) * H42s) / (pow(s14, 2) * pow(1 - C42, 2) - pow(s24, 2) * pow(1 - C41, 2)));
-	float f413 = sqrt((pow(s34, 2) * H41s - pow(s14, 2) * H43s) / (pow(s14, 2) * pow(1 - C43, 2) - pow(s34, 2) * pow(1 - C41, 2)));
-	float f423 = sqrt((pow(s34, 2) * H42s - pow(s24, 2) * H43s) / (pow(s24, 2) * pow(1 - C43, 2) - pow(s34, 2) * pow(1 - C42, 2)));
+	float fs[12] = {
+		sqrt((pow(s13, 2) * H12s - pow(s12, 2) * H13s) / (pow(s12, 2) * pow(1 - C13, 2) - pow(s13, 2) * pow(1 - C12, 2))),
+		sqrt((pow(s14, 2) * H12s - pow(s12, 2) * H14s) / (pow(s12, 2) * pow(1 - C14, 2) - pow(s14, 2) * pow(1 - C12, 2))),
+		sqrt((pow(s14, 2) * H13s - pow(s13, 2) * H14s) / (pow(s13, 2) * pow(1 - C14, 2) - pow(s14, 2) * pow(1 - C13, 2))),
+		sqrt((pow(s23, 2) * H21s - pow(s12, 2) * H23s) / (pow(s12, 2) * pow(1 - C23, 2) - pow(s23, 2) * pow(1 - C21, 2))),
+		sqrt((pow(s24, 2) * H21s - pow(s12, 2) * H24s) / (pow(s12, 2) * pow(1 - C24, 2) - pow(s24, 2) * pow(1 - C21, 2))),
+		sqrt((pow(s24, 2) * H23s - pow(s23, 2) * H24s) / (pow(s23, 2) * pow(1 - C24, 2) - pow(s24, 2) * pow(1 - C23, 2))),
+		sqrt((pow(s23, 2) * H31s - pow(s13, 2) * H32s) / (pow(s13, 2) * pow(1 - C32, 2) - pow(s23, 2) * pow(1 - C31, 2))),
+		sqrt((pow(s34, 2) * H31s - pow(s13, 2) * H34s) / (pow(s13, 2) * pow(1 - C34, 2) - pow(s34, 2) * pow(1 - C31, 2))),
+		sqrt((pow(s34, 2) * H32s - pow(s23, 2) * H34s) / (pow(s23, 2) * pow(1 - C34, 2) - pow(s34, 2) * pow(1 - C32, 2))),
+		sqrt((pow(s24, 2) * H41s - pow(s14, 2) * H42s) / (pow(s14, 2) * pow(1 - C42, 2) - pow(s24, 2) * pow(1 - C41, 2))),
+		sqrt((pow(s34, 2) * H41s - pow(s14, 2) * H43s) / (pow(s14, 2) * pow(1 - C43, 2) - pow(s34, 2) * pow(1 - C41, 2))),
+		sqrt((pow(s34, 2) * H42s - pow(s24, 2) * H43s) / (pow(s24, 2) * pow(1 - C43, 2) - pow(s34, 2) * pow(1 - C42, 2)))
+	};
 
-	float f2 = (f123 + f124 + f134 + f213 + f214 + f234 + f312 + f314 + f324 + f412 + f413 + f423) / 12.0;
-	//float f = (f123 + f124 + f134 + f213 + f214 + f234 + f312 + f324 + f412 + f413 + f423) / 11.0;
+	float count = 0.0;
+	float sum = 0.0;
+	for (int i = 0; i < 12; i++) {
+		if (fs[i] > 0) {
+			sum += fs[i];
+			count += 1.0;
+		}
+	}
+
+	if (count != 0) f = sum / count;
 
 	float F1 = sqrt(pow(x1, 2) + pow(y1, 2) + pow(f, 2));
 	float F2 = sqrt(pow(x2, 2) + pow(y2, 2) + pow(f, 2));
@@ -140,16 +150,21 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4], fl
 		//P3[i] = cvPoint3D32f((-x3 / F3) * d3, (-y3 / F3) * d3, f + (f / F3) * d3);
 		//P4[i] = cvPoint3D32f((-x4 / F4) * d4, (-y4 / F4) * d4, f + (f / F4) * d4);
 		//TODO: check how the z should be calculated
-		P1[i] = cvPoint3D32f((x1 / F1) * d1, (y1 / F1) * d1, 1 + (1 / F1) * d1);
-		P2[i] = cvPoint3D32f((x2 / F2) * d2, (y2 / F2) * d2, 1 + (1 / F2) * d2);
-		P3[i] = cvPoint3D32f((x3 / F3) * d3, (y3 / F3) * d3, 1 + (1 / F3) * d3);
-		P4[i] = cvPoint3D32f((x4 / F4) * d4, (y4 / F4) * d4, 1 + (1 / F4) * d4);
+		P1[i] = cvPoint3D32f((x1 / F1) * d1, (y1 / F1) * d1, (f + (f / F1) * d1)/f);
+		P2[i] = cvPoint3D32f((x2 / F2) * d2, (y2 / F2) * d2, (f + (f / F2) * d2)/f);
+		P3[i] = cvPoint3D32f((x3 / F3) * d3, (y3 / F3) * d3, (f + (f / F3) * d3)/f);
+		P4[i] = cvPoint3D32f((x4 / F4) * d4, (y4 / F4) * d4, (f + (f / F4) * d4)/f);
+
 	}
 
 	out[0] = cvPoint3D32f((P1[2].x + P1[3].x) / 2, (P1[2].y + P1[3].y) / 2, (P1[2].z + P1[3].z) / 2);
 	out[1] = cvPoint3D32f((P2[2].x + P2[3].x) / 2, (P2[2].y + P2[3].y) / 2, (P2[2].z + P2[3].z) / 2);
 	out[2] = cvPoint3D32f((P3[2].x + P3[3].x) / 2, (P3[2].y + P3[3].y) / 2, (P3[2].z + P3[3].z) / 2);
 	out[3] = cvPoint3D32f((P4[2].x + P4[3].x) / 2, (P4[2].y + P4[3].y) / 2, (P4[2].z + P4[3].z) / 2);
+	
+	//float R23 = sqrt(H23s + pow(f, 2)*pow((1-C23), 2));
+	//CvPoint3D32f P1_new = cvPoint3D32f(-x2*s23*pow(R23, -1), -y2*s23*pow(R23, -1), f*(s23*pow(R23, -1)+1));
+	//printf("HI");
 
 	*confidence = std_dev;
 

@@ -79,6 +79,8 @@ int GetTargetPoseEstimate(const IplImage* raw_image, const CvMat* K, const CvMat
 	}
 
 	ChoosePoints3678(centers, points3678);
+	//points3678[1].x = 629;
+	//points3678[1].y = 1228;
 
 	CvPoint2D32f C[4]; // target points (x,y) in camera coordinates
 	PixelToCameraCoordinate(points3678, C, K);
@@ -94,6 +96,9 @@ int GetTargetPoseEstimate(const IplImage* raw_image, const CvMat* K, const CvMat
 	RadiansToDegreesEulers(euler, euler_deg);
 
 	//TODO: implement reprojection or maybe use matlab for that
+
+	//VisualiseContours(undistorted, point_set, centers, points3678);
+
 
 	return EOK;
 }

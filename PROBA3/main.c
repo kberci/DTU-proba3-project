@@ -24,6 +24,29 @@ int main(int argc, char* argv[]) {
 		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_12.png",
 		"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/2_3/random_13.png"
 	};
+	//char files[21][1000] = {
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/-10.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/-9.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/-8.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/-7.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/-6.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/-5.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/-4.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/-3.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/-2.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/-1.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/0.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/1.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/2.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/3.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/4.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/5.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/6.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/7.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/8.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/9.png",
+	//	"D:/Kajatin/Uni/9 2019 Autumn/Image Analysis on Microcomputer/Project/img processing and abidi/images/0412/4/horizontal/10.png"
+	//};
 
 	CvMat* K = cvCreateMat(3, 3, CV_32FC1); // matrix that stores the (static) intrinsic parameters of the camera
 	GetCameraIntrinsicMatrix(K);
@@ -32,10 +55,10 @@ int main(int argc, char* argv[]) {
 	GetDistancesMatrix(S);
 
 	FILE* fp;
-	fopen_s(&fp, "results.csv", "a");
+	fopen_s(&fp, "results_c.csv", "a");
 	fprintf(fp, "file,rot_x,rot_y,rot_z,x,y,z,confidence,p0x,p0y,p1x,p1y,p2x,p2y,p3x,p3y\n");
 
-	for (int i = 0; i < 20; i++) {
+	for (int i = 0; i < 8; i++) {
 		printf("Processing %d ...  ", i);
 		// read image
 		IplImage* raw_image = cvLoadImage(files+i, 0);
