@@ -16,6 +16,11 @@ int PixelToCameraCoordinate(const CvPoint2D32f P[4], CvPoint2D32f C[4], const Cv
 		// apply inverse of K to pixel coordinates to get to normalized coordinates
 		C[i].x = (P[i].x * fy - P[i].y * s - cx * fy + cy * s) / (fx * fy);
 		C[i].y = (P[i].y - cy) / fy;
+
+		//C[i].x = (P[i].x - 1152) * 0.0022;
+		//C[i].y = (P[i].y -  768) * 0.0022;
+
+		//printf("ps");
 	}
 
 	return EOK;
@@ -76,33 +81,7 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4], fl
 	float H42s = pow((x4 - C42 * x2), 2) + pow((y4 - C42 * y2), 2);
 	float H43s = pow((x4 - C43 * x3), 2) + pow((y4 - C43 * y3), 2);
 	
-	float f = 6.2278;
-
-	float fs[12] = {
-		sqrt((pow(s13, 2) * H12s - pow(s12, 2) * H13s) / (pow(s12, 2) * pow(1 - C13, 2) - pow(s13, 2) * pow(1 - C12, 2))),
-		sqrt((pow(s14, 2) * H12s - pow(s12, 2) * H14s) / (pow(s12, 2) * pow(1 - C14, 2) - pow(s14, 2) * pow(1 - C12, 2))),
-		sqrt((pow(s14, 2) * H13s - pow(s13, 2) * H14s) / (pow(s13, 2) * pow(1 - C14, 2) - pow(s14, 2) * pow(1 - C13, 2))),
-		sqrt((pow(s23, 2) * H21s - pow(s12, 2) * H23s) / (pow(s12, 2) * pow(1 - C23, 2) - pow(s23, 2) * pow(1 - C21, 2))),
-		sqrt((pow(s24, 2) * H21s - pow(s12, 2) * H24s) / (pow(s12, 2) * pow(1 - C24, 2) - pow(s24, 2) * pow(1 - C21, 2))),
-		sqrt((pow(s24, 2) * H23s - pow(s23, 2) * H24s) / (pow(s23, 2) * pow(1 - C24, 2) - pow(s24, 2) * pow(1 - C23, 2))),
-		sqrt((pow(s23, 2) * H31s - pow(s13, 2) * H32s) / (pow(s13, 2) * pow(1 - C32, 2) - pow(s23, 2) * pow(1 - C31, 2))),
-		sqrt((pow(s34, 2) * H31s - pow(s13, 2) * H34s) / (pow(s13, 2) * pow(1 - C34, 2) - pow(s34, 2) * pow(1 - C31, 2))),
-		sqrt((pow(s34, 2) * H32s - pow(s23, 2) * H34s) / (pow(s23, 2) * pow(1 - C34, 2) - pow(s34, 2) * pow(1 - C32, 2))),
-		sqrt((pow(s24, 2) * H41s - pow(s14, 2) * H42s) / (pow(s14, 2) * pow(1 - C42, 2) - pow(s24, 2) * pow(1 - C41, 2))),
-		sqrt((pow(s34, 2) * H41s - pow(s14, 2) * H43s) / (pow(s14, 2) * pow(1 - C43, 2) - pow(s34, 2) * pow(1 - C41, 2))),
-		sqrt((pow(s34, 2) * H42s - pow(s24, 2) * H43s) / (pow(s24, 2) * pow(1 - C43, 2) - pow(s34, 2) * pow(1 - C42, 2)))
-	};
-
-	float count = 0.0;
-	float sum = 0.0;
-	for (int i = 0; i < 12; i++) {
-		if (fs[i] > 0) {
-			sum += fs[i];
-			count += 1.0;
-		}
-	}
-
-	if (count != 0) f = sum / count;
+	float f = 1;
 
 	float F1 = sqrt(pow(x1, 2) + pow(y1, 2) + pow(f, 2));
 	float F2 = sqrt(pow(x2, 2) + pow(y2, 2) + pow(f, 2));
@@ -145,26 +124,16 @@ int GetP4PAbidi(const CvMat* S, const CvPoint2D32f P[4], CvPoint3D32f out[4], fl
 		float d3 = (C13 * F3 / F1) * d1;
 		float d4 = (C14 * F4 / F1) * d1;
 
-		//P1[i] = cvPoint3D32f((-x1 / F1) * d1, (-y1 / F1) * d1, f + (f / F1) * d1);
-		//P2[i] = cvPoint3D32f((-x2 / F2) * d2, (-y2 / F2) * d2, f + (f / F2) * d2);
-		//P3[i] = cvPoint3D32f((-x3 / F3) * d3, (-y3 / F3) * d3, f + (f / F3) * d3);
-		//P4[i] = cvPoint3D32f((-x4 / F4) * d4, (-y4 / F4) * d4, f + (f / F4) * d4);
-		//TODO: check how the z should be calculated
-		P1[i] = cvPoint3D32f((x1 / F1) * d1, (y1 / F1) * d1, (f + (f / F1) * d1)/f);
-		P2[i] = cvPoint3D32f((x2 / F2) * d2, (y2 / F2) * d2, (f + (f / F2) * d2)/f);
-		P3[i] = cvPoint3D32f((x3 / F3) * d3, (y3 / F3) * d3, (f + (f / F3) * d3)/f);
-		P4[i] = cvPoint3D32f((x4 / F4) * d4, (y4 / F4) * d4, (f + (f / F4) * d4)/f);
-
+		P1[i] = cvPoint3D32f((x1 / F1) * d1, (y1 / F1) * d1, f + (f / F1) * d1);
+		P2[i] = cvPoint3D32f((x2 / F2) * d2, (y2 / F2) * d2, f + (f / F2) * d2);
+		P3[i] = cvPoint3D32f((x3 / F3) * d3, (y3 / F3) * d3, f + (f / F3) * d3);
+		P4[i] = cvPoint3D32f((x4 / F4) * d4, (y4 / F4) * d4, f + (f / F4) * d4);
 	}
 
 	out[0] = cvPoint3D32f((P1[2].x + P1[3].x) / 2, (P1[2].y + P1[3].y) / 2, (P1[2].z + P1[3].z) / 2);
 	out[1] = cvPoint3D32f((P2[2].x + P2[3].x) / 2, (P2[2].y + P2[3].y) / 2, (P2[2].z + P2[3].z) / 2);
 	out[2] = cvPoint3D32f((P3[2].x + P3[3].x) / 2, (P3[2].y + P3[3].y) / 2, (P3[2].z + P3[3].z) / 2);
 	out[3] = cvPoint3D32f((P4[2].x + P4[3].x) / 2, (P4[2].y + P4[3].y) / 2, (P4[2].z + P4[3].z) / 2);
-	
-	//float R23 = sqrt(H23s + pow(f, 2)*pow((1-C23), 2));
-	//CvPoint3D32f P1_new = cvPoint3D32f(-x2*s23*pow(R23, -1), -y2*s23*pow(R23, -1), f*(s23*pow(R23, -1)+1));
-	//printf("HI");
 
 	*confidence = std_dev;
 
@@ -190,7 +159,8 @@ int GetDistancesMatrix(CvMat* S) {
 	float s34 = 153.5;
 	float s35 = 96.5;
 	float s36 = 749.5;
-	float s37 = 1032;
+	float s37 = 1033.2;
+	//float s37 = 1032;
 	float s38 = 746.5;
 
 	float s45 = 123.5;
@@ -203,7 +173,8 @@ int GetDistancesMatrix(CvMat* S) {
 	float s58 = 813.5;
 
 	float s67 = 883;
-	float s68 = 1251.5;
+	float s68 = 1251.748;
+	//float s68 = 1251.5;
 
 	float s78 = 884;
 
@@ -219,25 +190,25 @@ int GetDistancesMatrix(CvMat* S) {
 
 
 int CalculateRotationMatrix(const CvPoint3D32f abidi[4], CvMat* R) {
-	float x1 = abidi[0].x - abidi[1].x;
-	float y1 = abidi[0].y - abidi[1].y;
-	float z1 = abidi[0].z - abidi[1].z;
-	float x2 = abidi[2].x - abidi[1].x;
-	float y2 = abidi[2].y - abidi[1].y;
-	float z2 = abidi[2].z - abidi[1].z;
-	float x3 = abidi[3].x - abidi[1].x;
-	float y3 = abidi[3].y - abidi[1].y;
-	float z3 = abidi[3].z - abidi[1].z;
+	float x1 = abidi[0].x;
+	float y1 = abidi[0].y;
+	float z1 = abidi[0].z;
+	float x2 = abidi[2].x;
+	float y2 = abidi[2].y;
+	float z2 = abidi[2].z;
+	float x3 = abidi[3].x;
+	float y3 = abidi[3].y;
+	float z3 = abidi[3].z;
 
-	float tx1 = 154.75;
-	float ty1 = 733.35;
-	float tz1 = 18.0;
-	float tx2 = 883.0;
-	float ty2 = 0.0;
-	float tz2 = 18.0;
-	float tx3 = 885.5;
-	float ty3 = 884.0;
-	float tz3 = 18.0;
+	float tx1 = 155.117  + abidi[1].x;
+	float ty1 = -733.273 + abidi[1].y;
+	float tz1 = -18.0    + abidi[1].z;
+	float tx2 = 883.0    + abidi[1].x;
+	float ty2 = 0.0      + abidi[1].y;
+	float tz2 = -18.0    + abidi[1].z;
+	float tx3 = 886.243  + abidi[1].x;
+	float ty3 = -883.994 + abidi[1].y;
+	float tz3 = -18.0    + abidi[1].z;
 
 	float r1 = (ty1 * tz2 * x3 - ty1 * tz3 * x2 - ty2 * tz1 * x3 + ty2 * tz3 * x1 + ty3 * tz1 * x2 - ty3 * tz2 * x1) / (tx1 * ty2 * tz3 - tx1 * ty3 * tz2 - tx2 * ty1 * tz3 + tx2 * ty3 * tz1 + tx3 * ty1 * tz2 - tx3 * ty2 * tz1);
 	float r2 = -(tx1 * tz2 * x3 - tx1 * tz3 * x2 - tx2 * tz1 * x3 + tx2 * tz3 * x1 + tx3 * tz1 * x2 - tx3 * tz2 * x1) / (tx1 * ty2 * tz3 - tx1 * ty3 * tz2 - tx2 * ty1 * tz3 + tx2 * ty3 * tz1 + tx3 * ty1 * tz2 - tx3 * ty2 * tz1);

@@ -35,15 +35,15 @@ int UndistortImage(const IplImage* distorted, IplImage* undistorted, const CvMat
 	float cx = CV_MAT_ELEM(*K, float, 0, 2);
 	float cy = CV_MAT_ELEM(*K, float, 1, 2);
 	
-	float k1 = -0.2381;
-	float k2 = 0.3543;
+	float k1 = -0.2383; // +/- 0.0068
+	float k2 = 0.3740; // +/- 0.0489
 
 	for (int j = 0; j < undistorted->height; j++) {
 		for (int i = 0; i < undistorted->width; i++) {
 			// apply the inverse of K to pixel coordinates
 			float x = (i * fy - j * s - cx * fy + cy * s) / (fx * fy);
 			float y = (j - cy) / fy;
-			float r = pow(x, 2) + pow(y, 2);
+			float r = sqrt(pow(x, 2) + pow(y, 2));
 
 			// correct for radial distortion
 			float xp = x * (1 + k1 * pow(r, 2) + k2 * pow(r, 4));
@@ -93,10 +93,10 @@ int InterpolatePixelValue(IplImage* image, CvPoint2D32f p) {
 
 
 int GetCameraIntrinsicMatrix(CvMat* K) {
-	float fx = 2.8339e3;
-	float fy = 2.8277e3;
-	float cx = 1.0500e3;
-	float cy = 869.6825;
+	float fx = 2809.9656; // +/- 15.7482
+	float fy = 2808.1589; // +/- 15.2451
+	float cx = 1066.3077; // +/- 9.1332
+	float cy = 873.1504;  // +/- 9.3192
 	float s = 0;
 
 	CV_MAT_ELEM(*K, float, 0, 0) = fx;

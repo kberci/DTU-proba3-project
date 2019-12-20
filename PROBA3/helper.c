@@ -25,7 +25,7 @@ int GetTargetPoseEstimate(const IplImage* raw_image, const CvMat* K, const CvMat
 	uchar* h_data = (uchar*)hist->imageData;
 	for (int j = 0; j < h_height; j++) {
 		for (int i = 0; i < h_width; i++) {
-			h_data[i + j * h_step] = 40;
+			h_data[i + j * h_step] = 255;
 		}
 	}
 
@@ -50,8 +50,11 @@ int GetTargetPoseEstimate(const IplImage* raw_image, const CvMat* K, const CvMat
 	for (int i = 0; i < 256; i++) {
 		CvPoint pt1 = cvPoint(i, 256);
 		CvPoint pt2 = cvPoint(i, 256 - histogram[i]);
-		cvLine(hist, pt1, pt2, cvScalarAll(255),1,8,0);
+		cvLine(hist, pt1, pt2, cvScalarAll(40),1,8,0);
 	}
+
+	//cvSaveImage("histogram.png", hist, 0);
+
 
 
 
@@ -79,8 +82,6 @@ int GetTargetPoseEstimate(const IplImage* raw_image, const CvMat* K, const CvMat
 	}
 
 	ChoosePoints3678(centers, points3678);
-	//points3678[1].x = 629;
-	//points3678[1].y = 1228;
 
 	CvPoint2D32f C[4]; // target points (x,y) in camera coordinates
 	PixelToCameraCoordinate(points3678, C, K);
