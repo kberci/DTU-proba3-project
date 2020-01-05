@@ -129,10 +129,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="helper.c" />
-    <ClCompile Include="main.c" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="helper.h" />
     <ClInclude Include="main.h" />
   </ItemGroup>
