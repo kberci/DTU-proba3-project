@@ -9,6 +9,7 @@ int InitArray(Array* a, size_t initialSize) {
 	return EOK;
 }
 
+
 int InsertArray(Array* a, CvPoint element) {
 	if (a->used == a->size) {
 		a->size *= 2;
@@ -19,6 +20,7 @@ int InsertArray(Array* a, CvPoint element) {
 	return EOK;
 }
 
+
 int FreeArray(Array* a) {
 	free(a->array);
 	a->array = NULL;
@@ -26,6 +28,7 @@ int FreeArray(Array* a) {
 
 	return EOK;
 }
+
 
 int FindStart(const IplImage* image, CvPoint* start) {
 	uchar* image_data = (uchar*)image->imageData;
@@ -44,7 +47,6 @@ int FindStart(const IplImage* image, CvPoint* start) {
 	return EINVALID;
 }
 
-#define M_PI acos(-1.0)
 
 int FindContour(const IplImage* frame, CvPoint start, Array* point_set, CvPoint from, CvPoint p) {
 	// recursion base case: if 'p' == 'start'
@@ -77,6 +79,7 @@ int FindContour(const IplImage* frame, CvPoint start, Array* point_set, CvPoint 
 
 	return 0;
 }
+
 
 int FindBorder(const IplImage* image, CvPoint start, Array* point_set) {
 	int ws = image->widthStep;
@@ -131,6 +134,7 @@ int FindBorder(const IplImage* image, CvPoint start, Array* point_set) {
 	return EOK;
 }
 
+
 int FillInside(const IplImage* image, Array point_set) {
 	int ws = image->widthStep;
 	int h = image->height;
@@ -164,6 +168,7 @@ int FillInside(const IplImage* image, Array point_set) {
 	return EOK;
 }
 
+
 int FindCenter_with_Centroid(Array point_set, CvPoint2D32f* centroidCenter) {
 	int sumX = 0;
 	int sumY = 0;
@@ -176,6 +181,7 @@ int FindCenter_with_Centroid(Array point_set, CvPoint2D32f* centroidCenter) {
 
 	return EOK;
 }
+
 
 int FindCenter_with_Moments(const IplImage* image, Array point_set, CvPoint2D32f* momentCenter) {
 	double m00 = 0;
@@ -275,6 +281,7 @@ int RotationalTransformation(CvPoint2D32f point, CvPoint2D32f* convertedPoint, f
 	return EOK;
 }
 
+
 int ChoosePoints3678(CvPoint2D32f* centers, CvPoint2D32f* points3678) {
 	// Find geometrical center of the points:
 	float sumX = 0;
@@ -333,6 +340,7 @@ int ChoosePoints3678(CvPoint2D32f* centers, CvPoint2D32f* points3678) {
 			indicies[2] = i;
 		}
 	}
+
 
 	//Calculate their angle and match with the right points:
 	float angles[3];

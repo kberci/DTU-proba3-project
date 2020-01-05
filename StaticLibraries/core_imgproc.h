@@ -11,6 +11,7 @@
 #include "error_codes.h"
 
 #define TOTAL_POINTS 8
+#define M_PI acos(-1.0)
 
 
 int CreateBinary(const IplImage* frame, IplImage* binary, const int threshold);

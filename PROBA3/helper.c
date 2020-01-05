@@ -4,9 +4,6 @@ int GetTargetPoseEstimate(const IplImage* raw_image, const CvMat* K, const CvMat
 	IplImage* undistorted = cvCreateImage(cvSize(raw_image->width, raw_image->height), IPL_DEPTH_8U, 1);
 	UndistortImage(raw_image, undistorted, K);
 
-	
-
-
 	// calculate histogram for single channel
 	uchar* und_data = (uchar*)undistorted->imageData;
 	int histogram[256] = { 0 };
@@ -54,14 +51,6 @@ int GetTargetPoseEstimate(const IplImage* raw_image, const CvMat* K, const CvMat
 	}
 
 	//cvSaveImage("histogram.png", hist, 0);
-
-
-
-
-
-
-
-	
 	
 	IplImage* image_binary = cvCloneImage(undistorted);
 	int threshold = max_index - 10;
@@ -96,10 +85,7 @@ int GetTargetPoseEstimate(const IplImage* raw_image, const CvMat* K, const CvMat
 
 	RadiansToDegreesEulers(euler, euler_deg);
 
-	//TODO: implement reprojection or maybe use matlab for that
-
 	//VisualiseContours(undistorted, point_set, centers, points3678);
-
 
 	return EOK;
 }
