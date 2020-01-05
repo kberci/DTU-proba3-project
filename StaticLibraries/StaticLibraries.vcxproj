@@ -165,8 +165,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="core_imgproc.h" />
     <ClInclude Include="error_codes.h" />
+    <ClInclude Include="perspective.h" />
     <ClInclude Include="point_selection.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="core_imgproc.c" />
+    <ClCompile Include="perspective.c" />
+    <ClCompile Include="point_selection.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
